@@ -1,6 +1,7 @@
 const {DataTypes} = require('sequelize')
 const sequelize = require('../db/sequelize')
 
+//文章model
 const Article = sequelize.define('Article',{
     slug: {//别名
         type:DataTypes.STRING,
