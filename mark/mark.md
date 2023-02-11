@@ -40,3 +40,11 @@ Morgan是一个node.js:关于htp请求的日志中间件
  tiny: The minimal output. 
  :method: url status :res[content-length]-:response-time ms
 ```
+- jsonwebtoken
+``` 
+在前后分离的项目中，每次请求session都会变化,前端调用后端api接口，因此使用cors = require('cors')来解决了跨域问题，而跨域对于cookie来说，就是两个不同的网站，因此session会不停的变。
+在计算机身份认证中是令牌（临时）的意思，在词法分析中是标记的意思。一般我们所说的的token大多是指用于身份验证的token
+
+我们需要每次都知道当前请求的人是谁，但是又不想每次都让他提交用户名和密码，这时就需要有一个等同于用户名密码也能够标识用户身份的东西，即—token
+
+```
