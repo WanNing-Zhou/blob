@@ -39,13 +39,13 @@ module.exports.createUser = async (req, res, next) => {
         if (userData) {
             throw new HttpException(401, '用户注册邮箱已存在', 'email is exist')
         }
+
         //2)验证username是否存在
         userData = await User.findOne({where: {username}});
         if (userData) {
             throw new HttpException(401, '用户已存在', 'username is exist')
         }
-
-
+        console.log('hello')
         //创建用户
         //1)密码加密
         const md5PWD = await md5Password(password)
@@ -55,34 +55,30 @@ module.exports.createUser = async (req, res, next) => {
             password: md5PWD,
             email
         })
-        //3)创建成功: 返回数据
-        if (user) {
-            console.log(user);
-            //3.1)  创建token
-            let data = {}
-            data.username = username
-            data.email = email
-            // data.token = await sign(username, email)
-            res.json({
-                status: 200,
-                message: 'success',
-                data: {
-                    code: 1,
-                    message: '增加数据成功',
-                    data: user
-                }
-            })
-        } else {
-            throw  new HttpException(401, '注册失败,请重试', 'create error')
+        if (!user) {
+            throw new HttpException(401, "注册失败, 请重试", "create error");
         }
-
-
+        // console.log(user);
+        // 用户创建成功
+        // 1. 让用户登录
+        // 2. 用户直接登录完毕状态
+        const data = {}
+        data.username = user.dataValues.username;
+        data.email = user.dataValues.email;
+        // console.log(data);
+        data.token = await sign(data.username, data.email); //获取token
+        data.bio = user.dataValues.bio || '这个人很懒, 啥也没写';
+        data.avatar = user.dataValues.avatar || '';
+        console.log(data);
+        res.json({
+            status: 1,
+            message: "创建用户成功",
+            data,
+        });
     } catch (error) {
         //捕获try中抛出的错误
         next(error)
     }
-
-
 }
 
 
