@@ -31,7 +31,7 @@ const decode = (token) => {
 }
 
 //TESTING
-const test = async () => {
+/*const test = async () => {
     const data = {
         username: 'admin',
         email: 'admin.qq.com'
@@ -43,7 +43,7 @@ const test = async () => {
     console.log('Decoded', decoded)
 }
 
-test();
+test();*/
 
 module.exports = {
     sign,

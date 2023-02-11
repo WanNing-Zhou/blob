@@ -52,3 +52,7 @@ Morgan是一个node.js:关于htp请求的日志中间件
 - MD5 : 加密,增强数据的安全性
 
 - bcrypt 加密方案
+
+- jsonwebtoken: 用于加签解签
+
+- validator 用于验证
