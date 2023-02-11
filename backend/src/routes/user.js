@@ -25,6 +25,6 @@ router.post('/',(req,res)=>{
 */
 
 router.get('/',UserController.getUser)
-router.post('/',UserController.createUser)
+router.post('/users',UserController.createUser)
 
 module.exports = router
