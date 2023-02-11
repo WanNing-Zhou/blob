@@ -4,8 +4,14 @@ const express = require ('express')
 const initDB = require('./init/initDB')
 const initServer = require('./init/initServer')
 const initRoute = require('./init/initRoute')
+const cors = require('cors')
+const morgan =require('morgan')
 
-const app = express()
+const app = express() //解析中间件
+
+app.use(cors({credentials: true,origin: true})) //解决跨域中间件
+app.use(express.json())
+app.use(morgan('tiny')); //日志中间件
 
 //路由初始化
 initRoute(app)
@@ -21,6 +27,7 @@ main().catch((error)=>{
     console.error('server start error',error)
 });
 
+/*
 app.get('/api/v1/user',(req,res)=>{
     console.log('get data');
     res.json({
@@ -34,4 +41,4 @@ app.get('/api/v1/user',(req,res)=>{
             message:'请求成功'
         }
     })
-})
+})*/
