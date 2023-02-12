@@ -1,4 +1,4 @@
-const {decode} = require('jsonwebtoken');
+const {decode} = require('../../utils/jwt');
 const HttpException = require('../../exceptions/http.exception')
 
 module.exports.authMiddleware = async (req,res,next)=>{
@@ -12,18 +12,22 @@ module.exports.authMiddleware = async (req,res,next)=>{
     // 02 验证token类型
     const authHeaderArr = authHeader.split(' ');
     console.log(authHeaderArr)
-    if (authHeaderArr[0] !== 'Token'){
+    if (authHeaderArr[0] !== 'Bearer'){
+        // console.log('1------')
+        console.log(authHeaderArr[0])
         return next(new HttpException(401,'authorization 格式错误,格式 Token content','Token missing'))
     }
 
     // 03 验证token内容
     if (!authHeaderArr[1]){
+        // console.log('2-----')
         return next(new HttpException(401,'authorization 格式错误,格式 Token content','Token missing'))
     }
 
     // 03 解签验证
     try {
         const user = await decode(authHeaderArr[1])
+        // console.log('useris',user)
         if(!user){
             return next(new HttpException(401,'token 内容不存在','token decode error'))
         }

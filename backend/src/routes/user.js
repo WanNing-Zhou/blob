@@ -1,6 +1,7 @@
 const express = require('express')
 const router = express.Router()
 const UserController = require('../controller/user')
+const {authMiddleware} = require('../middleware/admin/auth.middleware');
 
 /*
 router.get('/',(req,res)=>{
@@ -28,7 +29,8 @@ router.post('/',UserController.createUser);
 //用户登录
 router.post('/login', UserController.login);
 
-router.get('/',UserController.getUser);
+router.get('/',authMiddleware,UserController.getUser); //获取用户时需要进行解签
+
 
 
 module.exports = router;

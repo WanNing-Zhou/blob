@@ -66,7 +66,7 @@ module.exports.createUser = async (req, res, next) => {
         data.username = user.dataValues.username;
         data.email = user.dataValues.email;
         // console.log(data);
-        data.token = await sign(data.username, data.email); //获取token
+        data.token = await sign(data.email,data.username); //获取token
         data.bio = user.dataValues.bio || '这个人很懒, 啥也没写';
         data.avatar = user.dataValues.avatar || '';
         console.log(data);
@@ -90,8 +90,12 @@ module.exports.login = async (req, res, next) => {
         //验证请求数据
         let {error,validate} =validateLoginUser(email,password);
         //验证业务逻辑
+        if (!validate) {
+            throw new HttpException(401, '用户提交数据校验失败', error)
+        }
         //用户是否存在
         const user = await  User.findByPk(email)
+        // console.log('dbUser+++++++++++',user)
         if(!user){
             throw new HttpException(401,"用户不存在","user not found");
         }
@@ -105,8 +109,8 @@ module.exports.login = async (req, res, next) => {
         //  生成token
         delete user.dataValues.password; //删除用户密码
         user.dataValues.token =await sign(
-            user.dataValues.username,
-            user.dataValues.email
+            user.dataValues.email,
+            user.dataValues.username
         );
             //返回数据
         return res.status(200).json({
@@ -121,8 +125,10 @@ module.exports.login = async (req, res, next) => {
 
 
 //获取用户
-module.exports.getUser = async (req, res) => {
-    res.json({
+module.exports.getUser = async (req, res,next) => {
+
+
+/*    res.json({
         status: 200,
         message: 'success',
         data: {
@@ -133,7 +139,35 @@ module.exports.getUser = async (req, res) => {
                 age: 18
             }
         }
-    })
+    })*/
+    try {
+        //获取i请求数据
+        const {email} = req.user;
+        console.log(req.user)
+
+        //验证请求数据
+        //email 验证用户是否存在
+        const user = await User.findByPk(email);
+        // console.log('userIs',user.dataValues)
+        if (!user){
+            throw  new HttpException(401,'用户不存在','user not found')
+        }
+        //返回数据
+        //  去除password字段
+        delete user.dataValues.password;
+        //添加token
+        user.dataValues.token = user.token
+        //返回用户数据
+        return res
+            .status(200)
+            .json({
+                status:1,
+                message:'请求用户信息成功',
+                data:user.dataValues
+            })
+    }catch (err){
+        next(err)
+    }
 }
 
 
