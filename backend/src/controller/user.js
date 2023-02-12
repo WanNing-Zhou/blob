@@ -6,10 +6,10 @@
  *      创建成功: 返回,创建token,返回数据,整体异常捕获next(error)
  *
  */
-const {validateCreateUser,validateLoginUser} = require("../utils/validate/user.validate") //判断用户信息是否正确
+const {validateCreateUser, validateLoginUser} = require("../utils/validate/user.validate") //判断用户信息是否正确
 const HttpException = require('../exceptions/http.exception') //错误处理
 const User = require('../models/User')
-const {md5Password,matchPassword} = require('../utils/md5');
+const {md5Password, matchPassword} = require('../utils/md5');
 const {sign} = require('../utils/jwt');
 
 
@@ -66,7 +66,7 @@ module.exports.createUser = async (req, res, next) => {
         data.username = user.dataValues.username;
         data.email = user.dataValues.email;
         // console.log(data);
-        data.token = await sign(data.email,data.username); //获取token
+        data.token = await sign(data.email, data.username); //获取token
         data.bio = user.dataValues.bio || '这个人很懒, 啥也没写';
         data.avatar = user.dataValues.avatar || '';
         console.log(data);
@@ -88,34 +88,34 @@ module.exports.login = async (req, res, next) => {
         let {email, password} = req.body
         // console.log(req.body)
         //验证请求数据
-        let {error,validate} =validateLoginUser(email,password);
+        let {error, validate} = validateLoginUser(email, password);
         //验证业务逻辑
         if (!validate) {
             throw new HttpException(401, '用户提交数据校验失败', error)
         }
         //用户是否存在
-        const user = await  User.findByPk(email)
+        const user = await User.findByPk(email)
         // console.log('dbUser+++++++++++',user)
-        if(!user){
-            throw new HttpException(401,"用户不存在","user not found");
+        if (!user) {
+            throw new HttpException(401, "用户不存在", "user not found");
         }
         //密码是否匹配
         const oldMd5Pwd = user.dataValues.password;
-        const match = matchPassword(oldMd5Pwd,password);
-        if(!match){
-            throw new HttpException('401',"用户输入密码错误","password not match")
+        const match = matchPassword(oldMd5Pwd, password);
+        if (!match) {
+            throw new HttpException('401', "用户输入密码错误", "password not match")
         }
         //返回数据
         //  生成token
         delete user.dataValues.password; //删除用户密码
-        user.dataValues.token =await sign(
+        user.dataValues.token = await sign(
             user.dataValues.email,
             user.dataValues.username
         );
-            //返回数据
+        //返回数据
         return res.status(200).json({
-            status:1,
-            data:user.dataValues,
+            status: 1,
+            data: user.dataValues,
             message: '用户登录成功'
         });
     } catch (err) {
@@ -125,21 +125,21 @@ module.exports.login = async (req, res, next) => {
 
 
 //获取用户
-module.exports.getUser = async (req, res,next) => {
+module.exports.getUser = async (req, res, next) => {
 
 
-/*    res.json({
-        status: 200,
-        message: 'success',
-        data: {
-            code: 1,
-            message: '请求数据成功',
+    /*    res.json({
+            status: 200,
+            message: 'success',
             data: {
-                name: '张三',
-                age: 18
+                code: 1,
+                message: '请求数据成功',
+                data: {
+                    name: '张三',
+                    age: 18
+                }
             }
-        }
-    })*/
+        })*/
     try {
         //获取i请求数据
         const {email} = req.user;
@@ -149,8 +149,8 @@ module.exports.getUser = async (req, res,next) => {
         //email 验证用户是否存在
         const user = await User.findByPk(email);
         // console.log('userIs',user.dataValues)
-        if (!user){
-            throw  new HttpException(401,'用户不存在','user not found')
+        if (!user) {
+            throw  new HttpException(401, '用户不存在', 'user not found')
         }
         //返回数据
         //  去除password字段
@@ -161,29 +161,56 @@ module.exports.getUser = async (req, res,next) => {
         return res
             .status(200)
             .json({
-                status:1,
-                message:'请求用户信息成功',
-                data:user.dataValues
+                status: 1,
+                message: '请求用户信息成功',
+                data: user.dataValues
             })
-    }catch (err){
+    } catch (err) {
         next(err)
     }
 }
 
 
 //更新用户
-module.exports.updateUser = async (req,res,next)=>{
+module.exports.updateUser = async (req, res, next) => {
     try {
         //01获取数据:账号email
-        const { email } = req.user
+        const {email} = req.user
         //02 获取更新数据: body.user
-        const bodyUser = req.body.user
-        if (!bodyUser){
-            throw new HttpException(401,'需要提交更细数据','update user info is required')
+        const userUpdate = req.body
+        if (Object.keys(userUpdate).length === 0) {
+            throw new HttpException(401, '需要提交更细数据', 'update user info is required')
         }
 
-    }catch (err){
+        //03:更新账号是否存在
+        const user = await User.findByPk(email);
+        if (!user) {
+            throw new HttpException(401, "用户不存在", "user not found")
+        }
+        const updateData = {};
+        //将更新的数据都存放在updateData中
+        if (userUpdate.bio) {
+            updateData.bio = userUpdate.bio;
+        }
+        if (userUpdate.avatar) {
+            updateData.avatar = userUpdate.avatar;
+        }
+        if (userUpdate.password) {
+            updateData.password = await md5Password(userUpdate.password);
+        }
+        // console.log(updateData)
+        const newUser = await user.update(updateData); //更新用户数据
 
+        //分配新的token认证信息
+        newUser.dataValues.token = await sign(newUser.dataValues.email, newUser.dataValues.username)
+        return res.status(200).json({
+            status: 1,
+            data: newUser.dataValues,
+            message: '用户信息修改成功'
+        })
+
+    } catch (err) {
+        next(err)
     }
 }
 

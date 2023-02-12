@@ -26,3 +26,11 @@ Header.Payload.Signature
 - Payload(负载): base64UrlEncode(payload)存放实际需要传递的数据
 - Signature(签名): HMACSHA256(base64UrlEncode(header)+'.'+base64UrlEncode(payload),secret)
 
+
+## 更新用户信息
+> put patch
+> put 更新所有的数据 幂等
+>  第一次更新某一个字段 A -> 之后都是B->B结果不变,幂等
+> get put delete幂等
+> post 不是幂等
+> patch相当于对资源的一部分更新,不是幂等的,造成多种操作效果
