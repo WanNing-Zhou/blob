@@ -23,8 +23,12 @@ router.post('/',(req,res)=>{
     console.log('控制器处理逻辑')
 })
 */
+//创建用户
+router.post('/',UserController.createUser);
+//用户登录
+router.post('/login', UserController.login);
 
-router.get('/',UserController.getUser)
-router.post('/users',UserController.createUser)
+router.get('/',UserController.getUser);
 
-module.exports = router
+
+module.exports = router;

@@ -6,10 +6,10 @@
  *      创建成功: 返回,创建token,返回数据,整体异常捕获next(error)
  *
  */
-const {validateCreateUser} = require("../utils/validate/user.validate")
-const HttpException = require('../exceptions/http.exception')
+const {validateCreateUser,validateLoginUser} = require("../utils/validate/user.validate") //判断用户信息是否正确
+const HttpException = require('../exceptions/http.exception') //错误处理
 const User = require('../models/User')
-const {md5Password} = require('../utils/md5');
+const {md5Password,matchPassword} = require('../utils/md5');
 const {sign} = require('../utils/jwt');
 
 
@@ -78,6 +78,44 @@ module.exports.createUser = async (req, res, next) => {
     } catch (error) {
         //捕获try中抛出的错误
         next(error)
+    }
+}
+
+//用户登录
+module.exports.login = async (req, res, next) => {
+    try {
+        //获取请求数据
+        let {email, password} = req.body
+        // console.log(req.body)
+        //验证请求数据
+        let {error,validate} =validateLoginUser(email,password);
+        //验证业务逻辑
+        //用户是否存在
+        const user = await  User.findByPk(email)
+        if(!user){
+            throw new HttpException(401,"用户不存在","user not found");
+        }
+        //密码是否匹配
+        const oldMd5Pwd = user.dataValues.password;
+        const match = matchPassword(oldMd5Pwd,password);
+        if(!match){
+            throw new HttpException('401',"用户输入密码错误","password not match")
+        }
+        //返回数据
+        //  生成token
+        delete user.dataValues.password; //删除用户密码
+        user.dataValues.token =await sign(
+            user.dataValues.username,
+            user.dataValues.email
+        );
+            //返回数据
+        return res.status(200).json({
+            status:1,
+            data:user.dataValues,
+            message: '用户登录成功'
+        });
+    } catch (err) {
+        next(err)
     }
 }
 

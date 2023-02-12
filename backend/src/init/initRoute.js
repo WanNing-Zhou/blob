@@ -6,7 +6,7 @@ const initRoute = (app)=>{
     })
 
     //使用路由
-    app.use('/api/v1',userRoute)
+    app.use('/api/v1/users',userRoute)
 }
 
 module.exports = initRoute;
