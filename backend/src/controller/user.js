@@ -171,3 +171,19 @@ module.exports.getUser = async (req, res,next) => {
 }
 
 
+//更新用户
+module.exports.updateUser = async (req,res,next)=>{
+    try {
+        //01获取数据:账号email
+        const { email } = req.user
+        //02 获取更新数据: body.user
+        const bodyUser = req.body.user
+        if (!bodyUser){
+            throw new HttpException(401,'需要提交更细数据','update user info is required')
+        }
+
+    }catch (err){
+
+    }
+}
+

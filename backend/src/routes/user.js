@@ -29,7 +29,15 @@ router.post('/',UserController.createUser);
 //用户登录
 router.post('/login', UserController.login);
 
+//获取用户信息:token
 router.get('/',authMiddleware,UserController.getUser); //获取用户时需要进行解签
+
+//获取用户信息 : username
+router.get('/:username',)
+
+//更新用户信息
+router.put('/',authMiddleware,UserController.updateUser)
+
 
 
 
