@@ -6,12 +6,15 @@
  *      创建成功: 返回,创建token,返回数据,整体异常捕获next(error)
  *
  */
+
+const {Op} = require('sequelize')
+
 const {validateCreateUser, validateLoginUser} = require("../utils/validate/user.validate") //判断用户信息是否正确
 const HttpException = require('../exceptions/http.exception') //错误处理
 const User = require('../models/User')
 const {md5Password, matchPassword} = require('../utils/md5');
 const {sign} = require('../utils/jwt');
-
+const sequelize = require("../db/sequelize");
 
 //创建用户
 module.exports.createUser = async (req, res, next) => {
@@ -171,7 +174,7 @@ module.exports.getUser = async (req, res, next) => {
 }
 
 
-//更新用户
+//更新关注列表
 module.exports.updateUser = async (req, res, next) => {
     try {
         //01获取数据:账号email
@@ -212,5 +215,42 @@ module.exports.updateUser = async (req, res, next) => {
     } catch (err) {
         next(err)
     }
+}
+
+module.exports.getUserList = async (req, res, next) => {
+    try {
+        const userList = await User.findAll({
+            where: {
+                email: {[Op.ne]: req.user.email}
+            },
+        });
+
+        //获取我关注的作者的email : sql串
+        const query = `select userEmail from followers where followerEmail='${req.user.email}'`;
+        const favouriteUser = (await sequelize.query(query))[0];
+        // console.log(favouriteUser)
+        const favoriteEmails = [];
+        for (let i = 0; i < favouriteUser.length; i++) {
+            favoriteEmails.push(favouriteUser[i].userEmail);
+        }
+        for (let i = 0; i < userList.length; i++) {
+            if (favoriteEmails.includes(userList[i].email)) {
+                userList[i].dataValues.favorite = true;
+            }
+        }
+        // console.log(userList)
+        res.json({
+            status: 1,
+            message: '获取用户列表成功',
+            data: userList
+        })
+    } catch (err) {
+        next(err)
+    }
+}
+
+//获取用户信息: 用户信息 & 获取分析信息 & 判断是否关注
+module.exports.getUserProfile = async (req, res, next) => {
+
 }
 
