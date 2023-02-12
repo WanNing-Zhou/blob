@@ -251,6 +251,17 @@ module.exports.getUserList = async (req, res, next) => {
 
 //获取用户信息: 用户信息 & 获取分析信息 & 判断是否关注
 module.exports.getUserProfile = async (req, res, next) => {
-
+    try {
+        // console.log(req.user)
+        const userToFollow = await  User.findOne({
+            where:{
+                email:req.user.email
+            },
+            include:['followers']
+        });
+        // console.log(userToFollow)
+    } catch (err) {
+        next(err)
+    }
 }
 
