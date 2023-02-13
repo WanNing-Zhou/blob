@@ -29,11 +29,39 @@ function handleArticle(article, author, favoriteCount, favorite) {
 
     //处理喜欢favorite
     article.dataValues.favoriteCount = favoriteCount; //喜欢的数量
-    if (article.dataValues.favorite) {
-        article.dataValues.favorite = favorite; //你是否喜欢
-    }
+    article.dataValues.favorite = favorite; //当前用户是否喜欢这篇文章
+
 
     return article.dataValues;//将处理结果返回
+}
+
+/**
+ * 获取文章关注信息
+ * @param article 文章
+ * @param currentUser 当前用户
+ * @returns {Promise<{favorite: boolean, favoriteCount: *}>} 返回一个对象对象{当前用户是否喜欢,喜欢这篇文章人的数量}
+ */
+
+const getFavorite = async (article, currentUser) => {
+    //有多少人喜欢这篇文章
+    const favoriteCount = await article.countUsers();
+
+    //当前登录用户是否喜欢这篇文章
+    let favorite = false;
+    if (currentUser) {
+        const favoriteUsers = await article.getUsers();
+        for (let user of favoriteUsers) {
+            if (user.email === currentUser.email) {
+                favorite = true;
+                break;
+            }
+        }
+    }
+
+    return {
+        favoriteCount,
+        favorite
+    }
 }
 
 
@@ -121,18 +149,50 @@ module.exports.getArticle = async (req, res, next) => {
         const {slug} = req.params;
         const article = await Article.findByPk(slug, {include: [Tag, User]});
 
+        const {favoriteCount, favorite} = await getFavorite(article, req.user);
+        const data = handleArticle(article, article.user, favoriteCount, favorite);
+        return res.status(200).json({
+            status: 1,
+            message: "获取文章成功",
+            // data: article,
+            data,
+        });
     } catch (err) {
         next(err)
     }
 }
 
-//获取文章:关注作者的文章
-module.exports.getArticle = async (req, res, next) => {
-    try {
+//删除文章
+module.exports.deleteArticle = async (req, res, next) => {
+    const {
+        slug
+    } = req.params;
+    const article = await Article.findByPk(slug);
 
-    } catch (err) {
-        next(err)
+    if (!article) {
+        throw new HttpException(404, "文章不存在", "article not found");
     }
+
+    //验证当前登录用户是否是当前文章的作者
+    const loginEmail = req.user.email;
+    const authorEmail = article.userEmail;
+    if (loginEmail !== authorEmail){
+        throw new HttpException(404, "无权限", "no permission");
+    }
+
+    //删除文章
+    const data = await article.destroy();
+
+    // 返回响应数据
+    // 文章, 图片... 在删除时可以相应的做一个回收站
+    //
+    return res.status().json({
+        status: 1,
+        message: "删除成功",
+        data,
+    });
+
 }
+
 
 //获取文章
