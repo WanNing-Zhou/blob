@@ -176,7 +176,7 @@ module.exports.deleteArticle = async (req, res, next) => {
     //验证当前登录用户是否是当前文章的作者
     const loginEmail = req.user.email;
     const authorEmail = article.userEmail;
-    if (loginEmail !== authorEmail){
+    if (loginEmail !== authorEmail) {
         throw new HttpException(404, "无权限", "no permission");
     }
 
@@ -191,8 +191,65 @@ module.exports.deleteArticle = async (req, res, next) => {
         message: "删除成功",
         data,
     });
-
 }
 
+//更新文章
 
-//获取文章
+module.exports.updateArticle = async (req, res, next) => {
+    try {
+        const {
+            slug
+        } = req.params;
+
+        const {title, description, body, tags} = req.body;
+
+        let article = await Article.findByPk(slug);
+
+        if (!article) {
+            throw new HttpException(404, "文章不存在", "article not found");
+        }
+
+        //验证当前登录用户是否是当前更新文章的作者
+        const loginEmail = req.user.email;
+        const authorEmail = article.userEmail;
+
+        if (loginEmail !== authorEmail) {
+            throw new HttpException(404, "无权限", "no permission");
+        }
+
+        //更新分为两部分
+        //1.文章内容更新
+        const updateArticle = await article.update({
+            title, description, body
+        });
+        //文章对应标签更新
+        if (tags && tags.length > 0) {
+            for (const t of tags) {
+                let existTag = await Tag.findByPk(t);
+
+                //信标签
+                if (!existTag) {
+                    let newTag = await Tag.create({name: t})
+                    await article.addTag(newTag);//添加新标签
+                } else {
+                    await article.addTag(existTag)
+                }
+
+            }
+        }
+
+        article = await Article.findByPk(slug, {include: Tag});
+
+        let author = await User.findByPk(loginEmail);
+        article = handleArticle(article, author);
+
+        return res.status(200).json({
+            status: 1,
+            message: "更新文章成功",
+            data: article,
+        });
+
+    } catch (err) {
+        next(err)
+    }
+}
