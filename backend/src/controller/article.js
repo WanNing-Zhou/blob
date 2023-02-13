@@ -444,6 +444,53 @@ module.exports.getArticle = async (req,res,next)=>{
 //获取关注作者的文章
 module.exports.getFollowArticlesController =async (req,res,next)=>{
     try {
+        const fansEmail = req.user.email;
+        //获取到关注作者的email账号
+        const query = `SELECT userEmail FROM followers WHERE followerEmail = '${fansEmail}'`;
+        const followerAuthors = await sequelize.query(query); //查询
+
+        //如果没有关注过别人
+        if (followerAuthors[0].length === 0) {
+            return res.status(200).json({
+                status: 1,
+                message: "获取关注文章成功",
+                data: {
+                    count: 0,
+                    articles: []
+                },
+            });
+        }
+
+        //如果有关注的作者 将执行以下代码
+        const followAuthorEmails = [];
+        for(let item of followerAuthors[0]){
+            followAuthorEmails.push(item.userEmail);
+        }
+        let {count,rows} = await Article.findAndCountAll({
+            distinct:true,
+            where:{
+                userEmail: followAuthorEmails
+            },
+            include: [Tag,User]
+        });
+
+        const articles = []; //文章容器
+        //将内容进行遍历
+        for (let t of rows){
+            const {favoriteCount, favorite} = await getFavorite(t, req.user);
+            //对文章进行处理
+            let handleArticle = handleArticle2(t, favoriteCount, favorite);
+            articles.push(handleArticle); //将文章添加到容器中
+            return res.status(200).json({ //响应结果
+                status: 1,
+                message: '获取关注文章成功',
+                data: {
+                    articles,
+                    count
+                }
+            });
+
+        }
 
     }catch (err){
         next(err)
