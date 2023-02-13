@@ -84,8 +84,56 @@ const cancelFollow = async (req, res, next) => {
         next(err)
     }
 }
+//获取当前用户粉丝,获取当前用id下followId
+//获取用户信息: 用户信息 & 获取粉丝信息 & 判断是否关注
+const getProfile = async (req,res,next)=>{
+    try{
+        const username = req.params.username;
+        //根据用户名获取用户信息
+        //查询用户所有粉丝
+        const userToFollow = await  User.findOne({
+            where:{
+                username,
+            },
+            include:['followers']
+        });
+
+        if (!userToFollow){
+            throw new HttpException(404,"被关注的用户不存在","user not found")
+        }
+        // console.log(userToFollow);
+        //是否关注
+        let followingUser = false;
+        if(req.user){ //如果用户身份认证成功
+            //遍历
+            for (let  t of userToFollow.followers){
+                if (t.dataValues.email === req.user.email){
+                    followingUser = true;
+                    break;
+                }
+            }
+        }
+        const profile = {
+            username,
+            bio:userToFollow.dataValues.bio,
+            avatar:userToFollow.dataValues.avatar,
+            following: followingUser, //是否关注过这个人
+            followers: userToFollow.followers
+        }
+        return res.status(200).json({
+            status: 1,
+            message: "获取用户信息成功",
+            data: profile,
+        });
+
+    }catch (err){
+        next(err)
+    }
+
+}
 
 module.exports = {
     follow,
-    cancelFollow
+    cancelFollow,
+    getProfile
 }
