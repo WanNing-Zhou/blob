@@ -36,7 +36,27 @@ module.exports.creatComment = async (req,res,next)=>{
             message: "评论成功",
             data: newComment,
         });
+    }catch (err){
+        next(err)
+    }
+}
 
+//获取评论列表 slug
+module.exports.getComments =async (req,res,next)=>{
+    try {
+        const{slug}= req.params;
+        const article =await Article.findByPk(slug);
+
+        if (!article){
+            throw new HttpException(404, "文章不存在", "article not found");
+        }
+
+        const  comments =await Comment.findAll({
+            where:{
+                ArticleSlug:slug
+            },
+            include:[{model:User,attributes:['username','bio','avatar']}],
+        });
 
     }catch (err){
         next(err)
@@ -44,6 +64,14 @@ module.exports.creatComment = async (req,res,next)=>{
 }
 
 
+//删除评论
+module.exports.deleteComment = async (req,res,next)=>{
+    try {
+
+    }catch (err){
+
+    }
+}
 
 
 
