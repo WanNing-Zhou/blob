@@ -1,11 +1,14 @@
-const express = require("express");
-const CommentController = require("../controller/comments");
-const { authMiddleware } = require("../middleware/admin/auth.middleware");
+const express = require('express')
+const router = express.Router()
+const {createComment,getCommnents,deleteCommnent} = require('../controller/comment')
+const authMiddleware = require('../middleware/auth.middleware')
 
-const router = express.Router();
+//添加评论
+router.post('/:slug',authMiddleware,createComment)
+//获取评论
+router.get('/:slug',getCommnents)
+//删除评论
+router.delete('/:slug/:id',authMiddleware,deleteCommnent)
 
-router.post("/:slug", authMiddleware, CommentController.creatComment);
-router.get("/:slug", authMiddleware, CommentController.getComments);
-router.delete("/:slug/:id", authMiddleware, CommentController.deleteComment);
 
-module.exports = router;
+module.exports = router

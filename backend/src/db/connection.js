@@ -1,19 +1,15 @@
-const sequelize = require('./sequelize')
+// const mongoose = require('mongoose');
 
-//数据库连接
-const dbConnection = async () => {
-    return new Promise(async (resolve, reject) => {
-        try {
-            await sequelize.authenticate();
-            // console.log(`mysql connect success on ${process.env.DB_PORT}`)
-            console.log('Connection mysql has been established successfully');
-            resolve();
-        } catch (error) {
-            // console.error(`mysql connect to the database fail:`,error);
-            console.error('Unable to connect to the database:', error);
-            reject(error);
-        }
-    })
-}
+// const initDB = async () => {
+//     return new Promise((resolve, reject) => {
+//         try {
+//             mongoose.connect(`mongodb://${process.env.DB_HOST}/${process.env.DB_NAME}`);
+//             console.log(`数据库连接成功:${process.env.DB_NAME}`);
+//         } catch (error) {
+//             console.log("数据库连接失败", error);
+//             reject()
+//         }
+//     }) 
+// }
 
-module.exports = dbConnection
+// module.exports = initDB

@@ -1,83 +1,88 @@
-const HttpException = require('../models/User')
-const User = require('../models/User')
-const Tag  = require('../models/Tag')
-const Article = require('../models/Article')
-const {handleArticle} = require('../utils/common')
+const HttpException = require("../exception/http.exception")
+const Article = require("../model/article")
+const User = require('../model/user')
+const Tag = require('../model/tag')
+const { getFavorite, handleArticle } = require('./article')  //需要在article文件中将其导出
 
-/**
- * 添加喜欢的文章: 当前登录用户
- * @param req
- * @param res
- * @param next
- * @returns {Promise<void>}
- */
-
-const addFavorite =async (req,res,next)=>{
+// 控制器 ： 添加喜欢
+const addFavorite = async (req, res, next) => {
     try {
-        const {slug} = req.params;
-        const article = await Article.findByPk(slug,{include:[Tag,User]});
+        // 获取文章slug
+        const { slug } = req.params
 
-        if (!article){
-            throw new HttpException(404, "文章不存在", "article not found");
+        //获取文章 ： 包含标签
+        let article = await Article.findOne({ slug })
+
+        // 喜欢文章的用户 ： 登录用户
+        const userEmail = req.user.email
+        const user = await User.findOne({ email: userEmail })
+
+        //文章添加喜欢的用户 在Article 表中 新增了字段beFavorite(被谁所喜欢)
+        let ff = article.beFavorite.includes(userEmail)
+        if (!ff) {
+            await Article.updateOne({ slug }, { "$push": { beFavorite: userEmail } })
         }
 
-        //文章添加喜欢这篇文章的用户: 当前登录用户
-        await article.addUsers(req.user.email);
+        article = await Article.findOne({ slug })
+        //获取喜欢信息
+        const { favoriteCount, favoried } = await getFavorite(article, req.user)
 
-        //喜欢的人数
-        const count = await article.countUsers();
+        //响应数据处理
+        let result = await handleArticle(slug, article.userEmail, favoriteCount, favoried)
 
-        const data =handleArticle(article,article.user,count,true);
-
-        res.status(200).json({
-            status:1,
-            message:'成功',
-            data
-        })
-    }catch (err){
-        next(err)
-    }
-}
-
-/**
- * 取消喜欢文章: 当前登录用户
- * @param req
- * @param res
- * @param next
- * @returns {Promise<void>}
- */
-
-const  removeFavorite = async (req,res,next)=>{
-    try{
-        const {slug} = req.params;
-
-        const article = await Article.findByPk(slug,{include:[Tag,User]});
-        if(!article){
-            throw new HttpException(404,"文章不存在","article not found");
-        }
-
-        //取消当前登录用户对这篇文章的喜欢
-        await article.removeUser(req.user.email);
-
-        //喜欢的人数
-        const count = await article.countUser();
-
-        //生成文章返回数据
-        const data = handleArticle(article,article.user,count,false);
+        //响应数据
         res.status(200).json({
             status: 1,
-            message: '取消成功',
-            data
-        });
+            message: '添加喜欢成功',
+            data: result
+        })
 
-    }catch (err){
-        next(err)
+    } catch (error) {
+        next(error)
     }
 }
+
+// 控制器 ： 取消喜欢
+const removeFavorite = async (req, res, next) => {
+    try {
+        // 获取文章slug
+        const { slug } = req.params
+
+        //获取文章 ： 包含标签
+        let article = await Article.findOne({ slug })
+
+        // 喜欢文章的用户 ： 登录用户
+        const userEmail = req.user.email
+        const user = await User.findOne({ email: userEmail })
+
+        //文章添加喜欢的用户 在Article 表中 新增了字段beFavorite(被谁所喜欢)
+        //需要取消关注--找到当前登录的人 在去表中 删除对应的此人  如果有才删除
+        let ff = article.beFavorite.includes(userEmail)
+        if (ff) {
+            await Article.updateOne({ slug }, { "$pull": { beFavorite: userEmail } })
+        }
+
+        article = await Article.findOne({ slug })
+        //获取喜欢信息
+        const { favoriteCount, favoried } = await getFavorite(article, req.user)
+
+        //响应数据处理
+        let result = await handleArticle(slug, article.userEmail, favoriteCount, favoried)
+
+        //响应数据
+        res.status(200).json({
+            status: 1,
+            message: '取消喜欢成功',
+            data: result
+        })
+
+    } catch (error) {
+        next(error)
+    }
+}
+
 
 module.exports = {
     addFavorite,
     removeFavorite
 }
-
-

@@ -1,8 +1,9 @@
 const uniqueSlug = require('unique-slug')
-
-const getSlug = () => {
+const getSlug = ()=>{
     let randomSlug = uniqueSlug()
     return randomSlug
+
+
 }
 
 module.exports = getSlug

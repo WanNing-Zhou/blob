@@ -1,502 +1,501 @@
-const sequelize = require("../db/sequelize")
-const HttpException = require('../exceptions/http.exception')
-const {getSlug} = require('../utils/slug')
-const Article = require('../models/Article')
-const Tag = require('../models/Tag');
-const User = require('../models/User')
+const HttpException = require("../exception/http.exception")
+const Article = require("../model/article")
+const Tag = require("../model/tag")
+const User = require("../model/user")
+const getSlug = require('../utils/slug')
+const TagList = require("../model/taglist")
+const Follow = require("../model/followers")
+const { decode } = require('../utils/jwt')
+const { listeners } = require("../model/article")
 
 /**
- *
- * @param article 文章信息 包含tags
- * @param author 作者的email
- * @param favoriteCount 喜欢这篇文章的人数
- * @param favorite 我是否喜欢这篇文章
+ * 
+ * @param {*} slug        当前文章的名字
+ * @param {*} email       当前文章的作者
+ * @param {*} favoriteCount 喜欢文章的数量   
+ * @param {*} favorited   是否喜欢此文章
+ * @returns Info
  */
+const handleArticle = async (slug, email, favoriteCount, favorited) => {
+    //拿到文章信息
+    let article = await Article.findOne({ slug })
+    // 拿到作者信息
+    let user = await User.findOne({ email })
+    // 拿到标签信息
+    let tags = await TagList.find({ articleSlug: slug })
 
-function handleArticle(article, author, favoriteCount, favorite) {
-    //处理tag
-    const tags = [];
-    for (const tag of article.Tags) {
-        tags.push(tag.name)//将标签添加到tags数组中
+    let tagsMsg = []
+    for (const tag of tags) {
+        tagsMsg.push(tag.tagName)
     }
-    // console.log(tags,"tags")
-    article.dataValues.tags = tags
-    // console.log(article)
-    //处理作者
-    delete author.dataValues.password;//删除作者的密码
-    delete article.dataValues.userEmail;//删除文章中的用户email
-    article.dataValues.author = author.dataValues;
 
-    //处理喜欢favorite
-    article.dataValues.favoriteCount = favoriteCount; //喜欢的数量
-    article.dataValues.favorite = favorite; //当前用户是否喜欢这篇文章
-
-
-    return article.dataValues;//将处理结果返回
+    let Info = {
+        slug: article.slug,
+        title: article.title,
+        body: article.body,
+        description: article.description,
+        tags: tagsMsg,
+        author: {
+            avatar: user.avatar,
+            bio: user.bio,
+            email: user.email,
+            username: user.username,
+        },
+        favoriteCount: favoriteCount || 0,
+        favorited: favorited || false
+    }
+    return Info
 }
 
 /**
- * 获取文章关注信息
- * @param article 文章
- * @param currentUser 当前用户
- * @returns {Promise<{favorite: boolean, favoriteCount: *}>} 返回一个对象对象{当前用户是否喜欢,喜欢这篇文章人的数量}
+ * 
+ * @param {*} article  文章对象
+ * @param {*} currentUer 当前的登录用户
+ * @returns {此篇文章被喜欢的总数，当前的登录用户是否喜欢}
  */
+const getFavorite = async (article, currentUer) => {
+    //此处拿到的是  此篇文章被谁喜欢   beFavorite:[]
+    const favoriteCount = article.beFavorite
 
-const getFavorite = async (article, currentUser) => {
-    //有多少人喜欢这篇文章
-    const favoriteCount = await article.countUsers();
-
-    //当前登录用户是否喜欢这篇文章
-    let favorite = false;
-    if (currentUser) {
-        const favoriteUsers = await article.getUsers();
-        for (let user of favoriteUsers) {
-            if (user.email === currentUser.email) {
-                favorite = true;
-                break;
-            }
-        }
+    // 判断是否有 用户Email传来 如果有校验是不是在上面的数组中
+    let favoried = false
+    if (currentUer) {
+        let loginEmail = currentUer.email
+        favoried = favoriteCount.includes(loginEmail)
     }
 
-    return {
-        favoriteCount,
-        favorite
-    }
+    return { favoriteCount: favoriteCount.length, favoried }
 }
 
-/**
- * 处理文章信息
- * @param article
- * @param favoriteCount
- * @param favorite
- * @returns {TModelAttributes}
- */
-function handleArticle2(article, favoriteCount, favorite) {
-    const tags = [];
-    for (const tag of article.Tags) {
-        tags.push(tag.name);
-    }
-    article.dataValues.tags = tags;
-
-    const author = article.user;
-    //删除文章的关键西悉尼
-    delete author.dataValues.password;
-    delete article.dataValues.userEmail;
-    delete article.dataValues.user;
-
-    //补充文章信息
-    article.dataValues.author = author;
-    article.dataValues.favoriteCount = favoriteCount;
-    article.dataValues.favorite = favorite;
-    return article.dataValues; //将文章信息返回
-}
-
-
-// 创建文章
-module.exports.createArticle = async (req, res, next) => {
+// 创建
+const createArticle = async (req, res, next) => {
     try {
-        //1.验证token
-        //2.获取body中的值
-        //可能包括标签(系统自带,已经存储过,自定义标签)
-
-        //01 获取数据
-        const {title, description, body, tags} = req.body
-        //02验证数据
+        // 01 获取数据 
+        const { title, description, body, tags } = req.body.article
+        // 02 TODO=>验证数据
         if (!title) {
             throw new HttpException(401, '文章标题不存在', 'title not found')
         }
-        // 03 获取作者email: 当前登录用户,创建文章=>登录用户就是作者
-        //此处是中间件通过解签得到的user用户信息
-        const {email, username} = req.user
+
+        // 03 获取作者email : 当前登录用户 创建文章=>登录用户就是作者
+        // 此处是从中间件中 那么user用户信息
+        const { email, username } = req.user
         // 04 验证作者信息
-        const author = await User.findByPk(email)
+        const author = await User.findOne({ email })
         if (!author) {
             throw new HttpException(401, '作者账号不存在', 'auhtor not found')
         }
-        //05 生成别名slug 存储文章
+        // 05 生成别名slug
         const slug = getSlug()
-        const article = await Article.create({
+
+        // 06 创建文章
+        await Article.insertMany({
             slug,
             title,
             description,
-            body,// #s ##s ###SSS 1. 2.
-            userEmail: email
+            body, // markdown  # title 
+            userEmail: email,
+            username
         })
-        // console.log(article)
-        //处理标签
-        //tags 前端串过来数组
-        //存储标签,只存信息/文章标签关联存储
-        // console.log(tags)
-        if (tags.length) {
-            //遍历每个标签
-            for (let t of tags) {
-                //查询自己存储的标签
-                let tag = await Tag.findByPk(t);
-                if (!tag) { //如果标签不存在,就新建一个标签类型
-                    tag = await Tag.create({name: t});
+
+        // 07 标签存储 : ['html','css'] 存储标签 和 文章标签关系
+        if (tags.length > 0) {
+            for (const t of tags) {
+                let exitTag = await Tag.findOne({ name: t })
+                if (!exitTag) { //标签不存在
+                    //存储标签
+                    await Tag.insertMany({ name: t })
+
+                    //存储文章和标签关系
+                    // await article.addTag(newTag)  此处待定  具体效果不明确
+                    await TagList.insertMany({ articleSlug: slug, tagName: t })
+                } else { // 标签存在
+                    //存储文章和标签关系
+                    // await article.addTag(exitTag)
+                    await TagList.insertMany({ articleSlug: slug, tagName: t })
                 }
-                //在验证标签类型是否存在之后为文章添加标签
-                await article.addTag(tag);
             }
-            const articleAndTags = await Article.findByPk(slug, {
-                include: Tag
-            })
-            // console.log()
-            const data = handleArticle(articleAndTags, author, 0, false);
-            /**
-             * return
-             * 文章 内容
-             * 1. 标题
-             * 2.买哦书
-             * 3.内容
-             * 4.时间
-             * 5.作者username
-             * 6.标签
-             * 7.关注信息
-             * 8.我是否关注过这篇文章
-             */
-
-            // console.log(data)
-            res.status(200).json({
-                status: 1,
-                message: "文章创建成功",
-                // data: article,
-                data,
-            });
         }
+        // 08 获取文章 ： 文章信息 + 作者信息 + 标签信息
+        let Info = await handleArticle(slug, email)
 
-    } catch (err) {
-        next(err)
+        // 10 响应数据
+        res.status(200).json({
+            status: 1,
+            message: '创建文章成功',
+            data: Info
+        })
+
+    } catch (error) {
+        next(error)
     }
 }
 
-//获取文章: 单个文章 获取文章信息可以不用登录
-module.exports.getArticle = async (req, res, next) => {
+//获取单个文章
+const getArticle = async (req, res, next) => {
     try {
-        const {slug} = req.params;
-        const article = await Article.findByPk(slug, {include: [Tag, User]});
 
-        const {favoriteCount, favorite} = await getFavorite(article, req.user);
-        const data = handleArticle(article, article.user, favoriteCount, favorite);
-        return res.status(200).json({
+        const slug = req.params.slug
+        // 文章 + 标签
+        // console.log(slug);
+
+        // 获取文章
+        let article = await Article.findOne({ slug })
+        // console.log(article);
+
+        // 获取作者
+        let userEmail = article.userEmail
+
+        //获取喜欢信息                                        文章对象    登录的用户
+        const { favoriteCount, favoried } = await getFavorite(article, req.user)
+
+        // 文章响应数据处理
+        let inFo = await handleArticle(slug, userEmail, favoriteCount, favoried)
+
+        res.status(200).json({
             status: 1,
-            message: "获取文章成功",
-            // data: article,
-            data,
-        });
-    } catch (err) {
-        next(err)
+            message: '获取文章成功',
+            data: inFo
+        })
+
+    } catch (error) {
+        next()
+    }
+}
+
+// 更新文章
+const updateArticle = async (req, res, next) => {
+    try {
+        // 获取更新文章slug 
+        const slug = req.params.slug
+
+        // 获取更新文章数据
+        const data = req.body.article
+        const title = data.title
+        const description = data.description
+        const body = data.body
+        const tags = data.tags
+
+        //获取更新文章 ：验证被更新文章是否存在
+        let article = await Article.findOne({ slug })
+        if (!article) {
+            throw new HttpException(401, '更新文章不存在', 'update article  not found')
+        }
+
+        //更新业务逻辑验证：登录用户只能更新自己的文章=>登录email===文章作者的email
+        let authorEmail = article.userEmail
+        let loginEmail = req.user.email
+
+        if (authorEmail !== loginEmail) {
+            throw new HttpException(403, '只有作者账号才能有更新权限', 'only author have permission to update article')
+        }
+        //更新文章
+        const updateArticle = await Article.findOneAndUpdate({ slug }, { title, description, body })
+
+        //更新标签
+        //1)删除文章和标签的关系
+        // mongoose 提示remove已经弃用  可以选择使用deleteMany
+        // 原有的remove 也能使用
+        await TagList.deleteMany({ articleSlug: slug })
+
+        // // 2) 创建标签和 文章与标签关系
+        if (tags.length > 0) {
+            for (const t of tags) {
+                let exitTag = await Tag.findOne({ name: t })
+                if (!exitTag) { //标签不存在
+                    //存储标签
+                    await Tag.insertMany({ name: t })
+                    //存储文章和标签关系
+                    await TagList.insertMany({ articleSlug: slug, tagName: t })
+                } else { // 标签存在
+                    //存储文章和标签关系
+                    await TagList.insertMany({ articleSlug: slug, tagName: t })
+                }
+            }
+        }
+        // //获取喜欢信息
+        const { favoriteCount, favoried } = await getFavorite(updateArticle, req.user)
+
+        // //响应数据处理
+        let inFo = await handleArticle(slug, updateArticle.userEmail, favoriteCount, favoried)
+
+        //响应数据
+        res.status(200).json({
+            status: 1,
+            message: "更新文章成功",
+            data: inFo
+        })
+
+    } catch (error) {
+        next(error)
     }
 }
 
 //删除文章
-module.exports.deleteArticle = async (req, res, next) => {
-    const {
-        slug
-    } = req.params;
-    const article = await Article.findByPk(slug);
-
-    if (!article) {
-        throw new HttpException(404, "文章不存在", "article not found");
-    }
-
-    //验证当前登录用户是否是当前文章的作者
-    const loginEmail = req.user.email;
-    const authorEmail = article.userEmail;
-    if (loginEmail !== authorEmail) {
-        throw new HttpException(404, "无权限", "no permission");
-    }
-
-    //删除文章
-    const data = await article.destroy();
-
-    // 返回响应数据
-    // 文章, 图片... 在删除时可以相应的做一个回收站
-    //
-    return res.status().json({
-        status: 1,
-        message: "删除成功",
-        data,
-    });
-}
-
-//更新文章
-
-module.exports.updateArticle = async (req, res, next) => {
+const deleteArticle = async (req, res, next) => {
     try {
-        const {
-            slug
-        } = req.params;
+        // 获取删除文章slug 
+        const slug = req.params.slug
 
-        const {title, description, body, tags} = req.body;
-
-        let article = await Article.findByPk(slug);
-
+        //获取删除文章 ：验证被删除文章是否存在
+        let article = await Article.findOne({ slug })
         if (!article) {
-            throw new HttpException(404, "文章不存在", "article not found");
+            throw new HttpException(401, '删除文章不存在', 'delete article  not found')
         }
 
-        //验证当前登录用户是否是当前更新文章的作者
-        const loginEmail = req.user.email;
-        const authorEmail = article.userEmail;
-
-        if (loginEmail !== authorEmail) {
-            throw new HttpException(404, "无权限", "no permission");
+        //更新业务逻辑验证：登录用户只能更新自己的文章=>登录email===文章作者的email
+        let authorEmail = article.userEmail
+        let loginEmail = req.user.email
+        if (authorEmail !== loginEmail) {
+            throw new HttpException(403, '只有作者账号才能有更新权限', 'only author have permission to update article')
         }
 
-        //更新分为两部分
-        //1.文章内容更新
-        const updateArticle = await article.update({
-            title, description, body
-        });
-        //文章对应标签更新
-        if (tags && tags.length > 0) {
-            for (const t of tags) {
-                let existTag = await Tag.findByPk(t);
+        //删除文章 
+        // 适合删除单个 ： 自己
+        await Article.deleteOne({ slug })
 
-                //信标签
-                if (!existTag) {
-                    let newTag = await Tag.create({name: t})
-                    await article.addTag(newTag);//添加新标签
-                } else {
-                    await article.addTag(existTag)
-                }
+        // 对应删除文章和标签的关系
+        await TagList.deleteMany({ articleSlug: slug })
 
-            }
-        }
-
-        article = await Article.findByPk(slug, {include: Tag});
-
-        let author = await User.findByPk(loginEmail);
-        article = handleArticle(article, author);
-
-        return res.status(200).json({
+        //响应数据
+        res.status(200).json({
             status: 1,
-            message: "更新文章成功",
-            data: article,
-        });
+            message: "删除文章成功",
+            data: article
+        })
 
-    } catch (err) {
-        next(err)
+    } catch (error) {
+        next(error)
     }
 }
 
-
-/**
- * 获取所有文章
- * @param req
- * @param res
- * @param next
- * @returns {Promise<*>}
- */
-
-module.exports.getArticles = async (req,res,next)=>{
+// 获取文章：当前登录用户所关注角色的文章
+const getFollowArticles = async (req, res, next) => {
     try {
-        //文章查询的字符串
-        const {tag,author,favorite,limit='10',offset='0'} = req.query;
-
-        let result={};
-        //如果标签存在,作者不存在
-        if (tag && !author){
-            result =await  Article.findAndCountAll({
-                distinct:true,
-                include:[{
-                    model:Tag,
-                    attributes:['name'],
-                    where:{
-                        name:tag
-                    }
-                },{
-                    model:User,
-                    attributes:['email','username','bio','avatar']
-                }],
-                limit:parseInt(limit),
-                offset:parseInt(offset)
-            });
-        }
-        //如果作者存在,标签不存在
-        if(!tag && author){
-           result = await Article.findAndCountAll({
-                distinct: true,
-                include: [{
-                    model: Tag,
-                    attributes: ["name"]
-                },
-                    {
-                        model: User,
-                        attributes: ["email", "username", "bio", "avatar"],
-                        where: {
-                            username: author
-                        },
-                    },
-                ],
-                limit: parseInt(limit),
-                offset: parseInt(offset),
-            });
+        // 粉丝（登录用户）邮箱
+        // 此时登录角色为A 找寻A关注了谁  A为粉丝 -->  被关注的就是zuozhe
+        const { limit = 5, offset = 0 } = req.query
+        const fansEmail = req.user.email
+        const fansUser = await User.findOne({ email: fansEmail })
+        if (!fansUser) {
+            throw new HttpException(401, '粉丝不存在', 'update article not found')
         }
 
-        //如果标签和作者都存在
-        if (tag && author) {
-            result = await Article.findAndCountAll({
-                distinct: true,
-                include: [{
-                    model: Tag,
-                    attributes: ["name"],
-                    where: {
-                        name: tag
-                    }
-                },
-                    {
-                        model: User,
-                        attributes: ["email", "username", "bio", "avatar"],
-                        where: {
-                            username: author
-                        },
-                    },
-                ],
-                limit: parseInt(limit),
-                offset: parseInt(offset),
-            });
+        // 获取当前粉丝关注的所有的作者
+        const auhtor = await Follow.find({ userEmail: fansEmail })
+        // 没有关注的作者
+        if (auhtor.length == 0) {
+            res.status(200).json({
+                status: 1,
+                message: "获取关注作者的文章成功",
+                data: []
+            })
+        }
+        //所有关注者的email  (当前粉丝所关注的所有作者)
+        let authorEmails = []
+        for (const item of auhtor) {
+            authorEmails.push(item.followerEmail)
+        }
+        // console.log(authorEmails); // ['email1','email2']
+
+        // 批量查询 ：所有关注的作者的文章 
+        // count : 文章总数=>分页
+        // rows  ： 文章数据数据
+        let resObj = {
+            count: 0
+        }
+        for (const item of authorEmails) {
+            let cc1 = await Article.find({ userEmail: item })
+            let cc = await Article.find({ userEmail: item })
+            // console.log(cc,11);
+            resObj[item] = cc
+            resObj.count += cc1.length
         }
 
-        //作者喜欢的文章
-        if (favorite){
-            const author = await User.findOne({
-                where: {
-                    username: favorite
-                }
-            });
+        // console.log(resObj);
 
-            const authorEmail = author.email;
-            //sql语句,查询到作者喜欢的文章
-            const query = `SELECT ArticleSlug FROM favourites WHERE userEmail='${authorEmail}'`
-            const queryResult = await sequelize.query(query);
-            // console.log(queryResult, 'queryResult');
-            //查询结果为空进行处理
-            if (queryResult[0].length === 0) {
-                return res.status(200).json({
-                    status: 1,
-                    message: "文章列表为空",
-                    data: [],
-                });
+        // 处理响应数据
+        let articles = []
+        for (const key in resObj) {
+            if (key == "count") {
+                continue;
             }
+            for (const item of resObj[key]) {
+                const { favoriteCount, favoried } = await getFavorite(item, req.user)
 
-            //如果不为空的情况则执行以下代码
-            const articleSlugs = [];
-            for (let item of queryResult[0]){
-                articleSlugs.push(item.ArticleSlug);
+                let reslut = await handleArticle(item.slug, item.userEmail, favoriteCount, favoried)
+                articles.push(reslut)
             }
-            result = await Article.findAndCountAll({
-                distinct:true,
-                where:{
-                    slug:articleSlugs
-                },
-                include:[Tag,User]
-            });
-            // console.log(result)
         }
 
-        //如果标签,作者,喜欢都为空,则查询所有
-        if (!tag && !author && !favorite) {
-            result = await Article.findAndCountAll({
-                distinct: true,
-                include: [{
-                    model: Tag,
-                    attributes: ["name"]
-                },
-                    {
-                        model: User,
-                        attributes: ["email", "username", "bio", "avatar"]
-                    },
-                ],
-                limit: parseInt(limit),
-                offset: parseInt(offset),
-            });
+
+        let arr = []
+        if (articles.length <= limit) {
+            arr = articles
+        } else {
+            arr = articles.splice(offset, limit)
         }
 
-        const {count,rows} = result;
-        //count 总记录 /limit 一页记录数 = 总页数
-        //rows 具体的文章内容
-        const articles = [];
-        console.log(req.user);
-        for (let t of rows){
-            const {
-                favoriteCount,
-                favorite
-            } =await getFavorite(t,req.user)
-            articles.push(handleArticle2(t,favoriteCount,favorite))
-        }
-        // console.log(articles)
-        //响应处理结果
-        return res.status(200).json({
+        //响应数据
+        res.status(200).json({
             status: 1,
-            message: "获取文章成功",
+            message: "获取关注作者的文章成功",
             data: {
-                articles,
-                count
-            },
-        });
-
-    }catch (err){
-        next(err)
+                count: resObj.count,
+                arr
+            }
+        })
+    } catch (error) {
+        next(error)
     }
 }
 
-//获取关注作者的文章
-module.exports.getFollowArticlesController =async (req,res,next)=>{
+// 全局文章： 条件 author(自己的文章)/ favorite(用户喜欢的文章) / tag / limit / offset ..
+const getArticles = async (req, res, next) => {
     try {
-        const fansEmail = req.user.email;
-        //获取到关注作者的email账号
-        const query = `SELECT userEmail FROM followers WHERE followerEmail = '${fansEmail}'`;
-        const followerAuthors = await sequelize.query(query); //查询
+        // 前端分页中有个小BUG 页面一直显示5条数据 
+        // 原因已经定位 因为limit决定了 就显示5条 后续测试中考虑如何解决
 
-        //如果没有关注过别人
-        if (followerAuthors[0].length === 0) {
-            return res.status(200).json({
-                status: 1,
-                message: "获取关注文章成功",
-                data: {
-                    count: 0,
-                    articles: []
-                },
-            });
+        //获取参数：query =>author favorite tag  limit offset
+        const { author, tag, favorite, limit = 10, offset = 0 } = req.query
+        let result = {
+            count: 0,
+            rows: []
+        };
+        //分场景查询
+        //标签过滤文章 :tag
+        if (tag && !author && !favorite) {
+            let obj1 = await TagList.find({ tagName: tag })
+            let obj = await TagList.find({ tagName: tag }).skip(offset).limit(limit)
+            result.count = obj1.length
+            result.rows = obj
         }
 
-        //如果有关注的作者 将执行以下代码
-        const followAuthorEmails = [];
-        for(let item of followerAuthors[0]){
-            followAuthorEmails.push(item.userEmail);
+        //作者自己的文章 : author  使用用户的邮箱账号进行查询
+        if (!tag && author && !favorite) {
+            let obj1 = await Article.find({ username: author })
+            let obj = await Article.find({ username: author }).skip(offset).limit(limit)
+            result.count = obj1.length
+            result.rows = obj
         }
-        let {count,rows} = await Article.findAndCountAll({
-            distinct:true,
-            where:{
-                userEmail: followAuthorEmails
-            },
-            include: [Tag,User]
-        });
 
-        const articles = []; //文章容器
-        //将内容进行遍历
-        for (let t of rows){
-            const {favoriteCount, favorite} = await getFavorite(t, req.user);
-            //对文章进行处理
-            let handleArticle = handleArticle2(t, favoriteCount, favorite);
-            articles.push(handleArticle); //将文章添加到容器中
-            return res.status(200).json({ //响应结果
-                status: 1,
-                message: '获取关注文章成功',
-                data: {
-                    articles,
-                    count
+        //作者文章和标签过滤 ： tag && author  过程很臃肿 有待提高
+        if (tag && author && !favorite) {
+            let arr1 = [];
+            let arr2 = [];
+            let arr3 = [];
+            let obj1 = await Article.find({ username: author })
+            let obj2 = await TagList.find({ tagName: tag })
+
+            for (const item of obj1) {
+                arr1.push(item.slug)
+            }
+            for (const item of obj2) {
+                arr2.push(item.articleSlug)
+            }
+            arr1.forEach(v => {
+                for (const item of arr2) {
+                    if (v == item) {
+                        arr3.push(item)
+                    }
                 }
-            });
+            })
+            for (const item of arr3) {
+                let objEnd = await Article.findOne({ slug: item }).skip(offset).limit(limit)
+                result.count += 1
+                result.rows.push(objEnd)
+            }
+        }
+
+        //作者喜欢的文章 ： favorite = 作者名
+        if (!tag && !author && favorite) {
+            // console.log(favorite)
+            const fansName = favorite
+            const fansUser = await User.findOne({ username: fansName })
+            if (!fansUser) {
+                throw new HttpException(401, '粉丝不存在', 'update article not found')
+            }
+            // 获取当前粉丝关注的所有的作者
+            const GuanZhuauhtor = await Follow.find({ userEmail: fansUser.email })
+
+            // 没有关注的作者
+            if (GuanZhuauhtor.length == 0) {
+                res.status(200).json({
+                    status: 1,
+                    message: "没有喜欢的文章",
+                    data: { count: 0, articles: [] }
+                })
+                return
+            }
+            //所有关注者的email  (当前粉丝所关注的所有作者)
+            let authorEmails = []
+            for (const item of GuanZhuauhtor) {
+                authorEmails.push(item.followerEmail)
+            }
+
+            for (const item of authorEmails) {
+                let cc = await Article.find({ userEmail: item }).skip(offset).limit(limit)
+                result.rows.push(...cc)
+                result.count += cc.length
+            }
+        }
+
+        // 其他情况 ：全局查询 没有具体条件 只做分页
+        if (!tag && !author && !favorite) {
+            let obj1 = await Article.find()
+            let obj = await Article.find().skip(offset).limit(limit)
+            result.count = obj1.length
+            result.rows = obj
+        }
+
+        // 登录传token 不登录 不传token
+        // const authHeader = req.headers.authorization
+        // const authHeaderArray = authHeader.split(' ')
+        // const token = authHeaderArray[1] //如果没有 ： undefined  没登陆
+        // let userinfo = null
+        // if (token) {
+        //     userinfo = await decode(token)
+        // }
+
+        // 处理数据
+        const articles = []
+        for (const item of result.rows) {
+            if (tag && !author && !favorite) {
+                let test = await Article.findOne({ slug: item.articleSlug })
+                const { favoriteCount, favoried } = await getFavorite(test, req.user)
+                //req.user
+                let reslut = await handleArticle(test.slug, test.userEmail, favoriteCount, favoried)
+                articles.push(reslut)
+            } else {
+                const { favoriteCount, favoried } = await getFavorite(item, req.user)
+                //req.user
+                let reslut = await handleArticle(item.slug, item.userEmail, favoriteCount, favoried)
+                articles.push(reslut)
+            }
 
         }
 
-    }catch (err){
-        next(err)
+        // 响应数据
+        res.status(200).json({
+            status: 1,
+            message: "获取全局文章成功",
+            data: {
+                count: result.count,
+                articles
+            }
+        })
+    } catch (error) {
+        next(error)
     }
 }
 
-
-
+module.exports = {
+    createArticle,
+    getArticle,
+    updateArticle,
+    deleteArticle,
+    getFollowArticles,
+    getFavorite,
+    handleArticle,
+    getArticles
+}

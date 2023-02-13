@@ -1,155 +1,112 @@
-const HttpException = require('../exceptions/http.exception')
-const User = require('../models/User')
-//关注功能
+const HttpException = require("../exception/http.exception")
+const User = require('../model/user')
+const Follow = require("../model/followers")
+
+// 控制器 ： 添加关注 ： A（登录用户：关注者）关注 B（被关注者） 
 const follow = async (req, res, next) => {
-    //1.自己主键的值
-    //2.关注的作者的主键的值
     try {
-        const {username} = req.params;
-        // console.log(username,"follow")
-        //获取关注的作者
-        const author = await User.findOne({
-            where: {
-                username
-            }
-        })
-        // console.log(author)
+        //00 验证登录 =>authMiddleware
 
-        if (!author) { //如果作者不存在
-            throw new HttpException(404, "被关注的用户不存在", "user not found");
+        //01 获取被关注者 
+        //获取username
+        const beFollowUsername = req.params.username
+
+        //通过获取的被关注者查询数据库中是否存在
+        let beFollower = await User.findOne({ username: beFollowUsername })
+        if (!beFollower) {
+            throw new HttpException(401, '被关注的用户不存在', 'user with this username not found')
         }
 
-        const {email} = req.user;
-        const fans = await User.findByPk(email)
-        if (!(await author.addFollower(fans))) {
-            throw new HttpException(404, "关注失败", "user not found");
+        //02 获取关注者
+        // 获取登录用户email  --  通过  token 自动获取的登录的用户
+        const folllowerEmail = req.user.email
+        // 通过email查询数据库中是否存在此用户
+        let follower = await User.findOne({ email: folllowerEmail })
+        if (!follower) {
+            throw new HttpException(401, '登录用户不存在', 'user  not found')
         }
-        //被关注者信息
-        const profile = {
-            username: author.username,
-            bio: author.bio,
-            avatar: author.avatar,
-            follow: true,
-            favourite: true
-        };
+
+        //03 关注的规则判断：自己不能关注自己
+        if (beFollower.email === folllowerEmail) {
+            throw new HttpException(401, '用户不能关注自己', 'user  can not follow yourself')
+        }
+
+        // 存入数据库之前先查询一次 查看表中是否有重复数据
+        // 如果有则不在存入 如果没有则存入数据中
+        let result = await Follow.findOne({ userEmail: folllowerEmail, followerEmail: beFollower.email })
+
+        if (!result) {
+            await Follow.insertMany({ userEmail: folllowerEmail, followerEmail: beFollower.email })
+        }
 
         res.status(200).json({
             status: 1,
             message: '关注成功',
-            data: profile,
+            data: {
+                email: beFollower.email,
+                username: beFollower.username, 
+                avatar: beFollower.avatar,
+                bio: beFollower.bio,
+                following:true
+            }
         })
-    } catch (err) {
-        next(err)
+
+    } catch (error) {
+        next(error)
     }
 }
 
-//取消关注
-const cancelFollow = async (req, res, next) => {
+// 控制器 ： 取消关注
+const unfollow = async (req, res, next) => {
     try {
-        const {username} = req.params;
-        //获取取消关注对象
-        const userToFollow = await User.findOne({
-            where: {
-                username
-            }
-        });
+        //00 验证登录 =>authMiddleware
 
-        //如果取消关注对象不存在
-        if (!userToFollow) {
-            throw new HttpException(404, "取消关注失败, 用户不存在", "user not found");
+        //01 获取被关注者 
+        //获取username
+        const beFollowUsername = req.params.username
+
+        //通过获取的被关注者查询数据库中是否存在
+        let beFollower = await User.findOne({ username: beFollowUsername })
+        if (!beFollower) {
+            throw new HttpException(401, '被关注的用户不存在', 'user with this username not found')
         }
 
-        //获取自己的信息
-        const user = await User.findByPk(req.user.email);
-        // console.log(userToFollow)
-        //取消关注并判断操作是成功
-        if (!userToFollow.removeFollower(user)){
-            throw new HttpException(404, "取消关注失败, 用户不存在", "user not found");
+        //02 获取关注者
+        // 获取登录用户email
+        const folllowerEmail = req.user.email
+        // 通过email查询数据库中是否存在此用户
+        let follower = await User.findOne({ email: folllowerEmail })
+        if (!follower) {
+            throw new HttpException(401, '登录用户不存在', 'user  not found')
         }
 
-        const profile = {
-            username,
-            bio: userToFollow.bio,
-            avatar: userToFollow.avatar,
-            following: false,
-            favourite: false
-        };
+        // 存入数据库之前先查询一次 查看表中是否有重复数据
+        // 如果有则不在存入 如果没有则存入数据中
+        let result = await Follow.findOne({ userEmail: folllowerEmail, followerEmail: beFollower.email })
+
+        if (result) {
+            await Follow.remove({ userEmail: folllowerEmail, followerEmail: beFollower.email })
+        }
+
         res.status(200).json({
             status: 1,
-            message: '取消关注成功',
-            data: profile
-        });
-
-    } catch (err) {
-        next(err)
-    }
-}
-//获取当前用户粉丝,获取当前用id下followId
-//获取用户信息: 用户信息 & 获取粉丝信息 & 判断是否关注
-const getProfile = async (req,res,next)=>{
-    try{
-        //获取参数: 作者用户名
-        const username = req.params.username;
-        //根据用户名获取用户信息
-        //查询用户所有粉丝
-        const userToFollow = await  User.findOne({
-            where:{
-                username,
-            },
-            include:['followers']
-        });
-
-        if (!userToFollow){
-            throw new HttpException(404,"被关注的用户不存在","user not found")
-        }
-        // console.log(userToFollow);
-        //是否关注
-        //验证是否关注
-        // 当前登录粉丝 email: 通过token
-        //   是否关注:判断 当前登录的用户email是否在作者的所有粉丝的emails里面
-        const {email} = req.user
-        let followingUser = false;
-        let followers = []
-        if(req.user){ //如果用户身份认证成功
-            //遍历
-            for (let  t of userToFollow.followers){
-                if (t.dataValues.email === email){
-                    followingUser = true;
-                }
-
-                delete userToFollow.dataValues.password;
-                delete userToFollow.dataValues.followers;
-                followers.push(userToFollow.dataValues)
-
+            message: '取消关注',
+            data: {
+                email: beFollower.email,
+                username: beFollower.username, 
+                avatar: beFollower.avatar,
+                bio: beFollower.bio,
+                following:false
             }
-        }
+        })
 
-
-        //返回被关注者的信息
-        //  基本信息
-        // 关注状态
-        //粉丝西悉尼
-        const profile = {
-            username,
-            bio:userToFollow.dataValues.bio,
-            avatar:userToFollow.dataValues.avatar,
-            following: followingUser, //是否关注过这个人
-            followers: userToFollow.followers
-        }
-        return res.status(200).json({
-            status: 1,
-            message: "获取用户信息成功",
-            data: profile,
-        });
-
-    }catch (err){
-        next(err)
+    } catch (error) {
+        next(error)
     }
-
 }
+
 
 module.exports = {
     follow,
-    cancelFollow,
-    getProfile
+    unfollow
 }

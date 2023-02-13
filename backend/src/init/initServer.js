@@ -1,17 +1,16 @@
-//初始化服务启动模块
-const  initServer = async (app)=>{
+const initServer = async (app) => {
     return new Promise((resolve, reject) => {
-        const PORT = process.env.PORT || 8080;
-        //服务
-        app.listen(PORT,()=>{
-            console.log(`Server running on http://localhost:${PORT}`);
-            resolve();
-        }).on('error',(error)=>{
-            console.log('Server start fail:',error);
-            reject();
-        })
+        const PORT = process.env.PORT || 8000
+        const HOST = process.env.HOST || localhost
 
+        app.listen(PORT, () => {
+            console.log(`server is running on http://${HOST}:${PORT}`);
+            resolve()
+        }).on("error", (error) => {
+            console.log("服务器启动失败", error);
+            reject()
+        })
     })
 }
 
-module.exports = initServer;
+module.exports = initServer

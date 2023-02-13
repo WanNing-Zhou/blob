@@ -1,55 +1,40 @@
-require('dotenv').config({path:'.env'});
+// 配置项目环境
+require("dotenv").config('.env') //加载包 找到本地的env文件
 
-const express = require ('express')
-const cors = require('cors')
-const morgan =require('morgan')
-// const bodyParser = require('body-parser')
-const  noMatchMiddleware = require('./src/middleware/404.middleware')
-const errorMiddleware = require('./src/middleware/error.middleware')
-const initDB = require('./src/init/initDB')
-const initServer = require('./src/init/initServer')
-const initRoute = require('./src/init/initRoute')
+// 第三方中间件
+const cors = require("cors")
+const morgan = require("morgan")
 
+// 自定义中间件
+const noMachMiddleware = require("./src/middleware/404middleware")
+const errorMiddleware = require("./src/middleware/error.middleware")
 
-const app = express() //解析中间件
+const express = require("express")
+// const initDB = require("./src/db/connection")
+const initServer = require("./src/init/initServer")
+const initRoute = require("./src/init/initRoute")
+const app = express()
 
-app.use(cors({ //跨域中间件要使用再路由之前
-    credentials: true,
-    origin: true
-})) //解决跨域中间件
-app.use(express.urlencoded({extended: false}));
-app.use(express.json())
-app.use(morgan('tiny')); //日志中间件 //dev是开发模型,tiny是简写模式
+app.use(cors()) //解决跨域
 
-//路由初始化
-initRoute(app)
-app.use(noMatchMiddleware);
+app.use(express.json()) //数据解析
+
+app.use(morgan("tiny")) //http请求日志 下方为格式
+//morgan(':method :url :status :res[content-length] - :response-time ms')
+
+initRoute(app) //------
+
+//静态服务
+app.use(express.static('public'))
+
+// 处理404
+app.use(noMachMiddleware)
+
 app.use(errorMiddleware)
 
-
-
-//服务器启动入口
-const main = async ()=>{
-    await initDB();
+const main = async () => {
+    // await initDB()
     await initServer(app)
 }
 
-main().catch((error)=>{
-    console.error('server start error',error)
-});
-
-/*
-app.get('/api/v1/user',(req,res)=>{
-    console.log('get data');
-    res.json({
-        status:200,
-        message:'success',
-        data:{
-            code:1,
-            data:{
-                name:'hello'
-            },
-            message:'请求成功'
-        }
-    })
-})*/
+main()

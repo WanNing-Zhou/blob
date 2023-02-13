@@ -1,10 +1,11 @@
-const express = require('express');
-const TagController = require('../controller/tags');
-const { authMiddleware } = require('../middleware/admin/auth.middleware');
+const express = require('express')
+const router = express.Router()
+const { createTag, getTags, deleteTag } = require('../controller/tag')
+const authMiddleware = require('../middleware/auth.middleware')
 
-const router = express.Router();
 
-router.post("/", authMiddleware, TagController.createTag);
-router.get("/", authMiddleware, TagController.getTags);
+router.post('/', authMiddleware, createTag)
+router.get('/', getTags)
+router.delete('/:tag', authMiddleware, deleteTag)
 
-module.exports = router;
+module.exports = router
