@@ -64,6 +64,33 @@ const getFavorite = async (article, currentUser) => {
     }
 }
 
+/**
+ * 处理文章信息
+ * @param article
+ * @param favoriteCount
+ * @param favorite
+ * @returns {TModelAttributes}
+ */
+function handleArticle2(article, favoriteCount, favorite) {
+    const tags = [];
+    for (const tag of article.Tags) {
+        tags.push(tag.name);
+    }
+    article.dataValues.tags = tags;
+
+    const author = article.user;
+    //删除文章的关键西悉尼
+    delete author.dataValues.password;
+    delete article.dataValues.userEmail;
+    delete article.dataValues.user;
+
+    //补充文章信息
+    article.dataValues.author = author;
+    article.dataValues.favoriteCount = favoriteCount;
+    article.dataValues.favorite = favorite;
+    return article.dataValues; //将文章信息返回
+}
+
 
 // 创建文章
 module.exports.createArticle = async (req, res, next) => {
@@ -253,3 +280,175 @@ module.exports.updateArticle = async (req, res, next) => {
         next(err)
     }
 }
+
+
+/**
+ * 获取所有文章
+ * @param req
+ * @param res
+ * @param next
+ * @returns {Promise<*>}
+ */
+module.exports.getArticle = async (req,res,next)=>{
+    try {
+        //文章查询的字符串
+        const {tag,author,favorite,limit='10',offset='0'} = req.query;
+
+        let result={};
+        //如果标签存在,作者不存在
+        if (tag && !author){
+            result =await  Article.findAndCountAll({
+                distinct:true,
+                include:[{
+                    model:Tag,
+                    attributes:['name'],
+                    where:{
+                        name:tag
+                    }
+                },{
+                    model:User,
+                    attributes:['email','username','bio','avatar']
+                }],
+                limit:parseInt(limit),
+                offset:parseInt(offset)
+            });
+        }
+        //如果作者存在,标签不存在
+        if(!tag && author){
+           result = await Article.findAndCountAll({
+                distinct: true,
+                include: [{
+                    model: Tag,
+                    attributes: ["name"]
+                },
+                    {
+                        model: User,
+                        attributes: ["email", "username", "bio", "avatar"],
+                        where: {
+                            username: author
+                        },
+                    },
+                ],
+                limit: parseInt(limit),
+                offset: parseInt(offset),
+            });
+        }
+
+        //如果标签和作者都存在
+        if (tag && author) {
+            result = await Article.findAndCountAll({
+                distinct: true,
+                include: [{
+                    model: Tag,
+                    attributes: ["name"],
+                    where: {
+                        name: tag
+                    }
+                },
+                    {
+                        model: User,
+                        attributes: ["email", "username", "bio", "avatar"],
+                        where: {
+                            username: author
+                        },
+                    },
+                ],
+                limit: parseInt(limit),
+                offset: parseInt(offset),
+            });
+        }
+
+        //作者喜欢的文章
+        if (favorite){
+            const author = await User.findOne({
+                where: {
+                    username: favorite
+                }
+            });
+
+            const authorEmail = author.email;
+            //sql语句,查询到作者喜欢的文章
+            const query = `SELECT ArticleSlug FROM favourites WHERE userEmail='${authorEmail}'`
+            const queryResult = await sequelize.query(query);
+            // console.log(queryResult, 'queryResult');
+            //查询结果为空进行处理
+            if (queryResult[0].length === 0) {
+                return res.status(200).json({
+                    status: 1,
+                    message: "文章列表为空",
+                    data: [],
+                });
+            }
+
+            //如果不为空的情况则执行以下代码
+            const articleSlugs = [];
+            for (let item of queryResult[0]){
+                articleSlugs.push(item.ArticleSlug);
+            }
+            result = await Article.findAndCountAll({
+                distinct:true,
+                where:{
+                    slug:articleSlugs
+                },
+                include:[Tag,User]
+            });
+            // console.log(result)
+        }
+
+        //如果标签,作者,喜欢都为空,则查询所有
+        if (!tag && !author && !favorite) {
+            result = await Article.findAndCountAll({
+                distinct: true,
+                include: [{
+                    model: Tag,
+                    attributes: ["name"]
+                },
+                    {
+                        model: User,
+                        attributes: ["email", "username", "bio", "avatar"]
+                    },
+                ],
+                limit: parseInt(limit),
+                offset: parseInt(offset),
+            });
+        }
+
+        const {count,rows} = result;
+        //count 总记录 /limit 一页记录数 = 总页数
+        //rows 具体的文章内容
+        const articles = [];
+        console.log(req.user);
+        for (let t of rows){
+            const {
+                favoriteCount,
+                favorite
+            } =await getFavorite(t,req.user)
+            articles.push(handleArticle2(t,favoriteCount,favorite))
+        }
+        // console.log(articles)
+        //响应处理结果
+        return res.status(200).json({
+            status: 1,
+            message: "获取文章成功",
+            data: {
+                articles,
+                count
+            },
+        });
+
+    }catch (err){
+        next(err)
+    }
+}
+
+//获取关注作者的文章
+module.exports.getFollowArticlesController =async (req,res,next)=>{
+    try {
+
+    }catch (err){
+        next(err)
+    }
+}
+
+
+
