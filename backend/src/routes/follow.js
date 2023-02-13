@@ -10,3 +10,5 @@ router.post('/:username',authMiddleware,FollowController.follow);
 router.delete("/:username",authMiddleware,FollowController.cancelFollow);
 //获取当前用户粉丝
 router.get("/:username",authMiddleware,FollowController.getProfile)
+
+module.exports = router
