@@ -1,5 +1,7 @@
 const HttpException = require('../models/User')
-const {User,Article,Tag} = require('../models')
+const User = require('../models/User')
+const Tag  = require('../models/Tag')
+const Article = require('../models/Article')
 const {handleArticle} = require('../utils/common')
 
 /**

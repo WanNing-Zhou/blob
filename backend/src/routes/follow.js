@@ -2,7 +2,7 @@ const express = require('express');
 const  FollowController = require('../controller/follow');
 const {authMiddleware} = require('../middleware/admin/auth.middleware')
 
-const router = express.Router;
+const router = express.Router();
 
 //关注
 router.post('/:username',authMiddleware,FollowController.follow);

@@ -289,7 +289,8 @@ module.exports.updateArticle = async (req, res, next) => {
  * @param next
  * @returns {Promise<*>}
  */
-module.exports.getArticle = async (req,res,next)=>{
+
+module.exports.getArticles = async (req,res,next)=>{
     try {
         //文章查询的字符串
         const {tag,author,favorite,limit='10',offset='0'} = req.query;
