@@ -41,7 +41,13 @@ module.exports.creatComment = async (req,res,next)=>{
     }
 }
 
-//获取评论列表 slug
+/**
+ * 获取评论列表 通过slug
+ * @param req
+ * @param res
+ * @param next
+ * @returns {Promise<void>}
+ */
 module.exports.getComments =async (req,res,next)=>{
     try {
         const{slug}= req.params;
@@ -64,12 +70,37 @@ module.exports.getComments =async (req,res,next)=>{
 }
 
 
-//删除评论
+/**
+ * 删除评论
+ * @param req
+ * @param res
+ * @param next
+ * @returns {Promise<*>}
+ */
 module.exports.deleteComment = async (req,res,next)=>{
     try {
+        const {slug,id} =req.params;
+        const article = await Article.findByPk('slug');
+
+        if (!article) {
+            throw new HttpException(404, "文章不存在", "article not found");
+        }
+
+        //判断当前登录用户是否是发表评论的人
+        if (req.user.email !== comment.userEmail) {
+            throw new HttpException(404, "无权限", "no permission");
+        }
+
+        await Comment.destroy({ where: { id } });
+
+        return res.status(200).json({
+            status: 1,
+            message: "删除评论成功",
+        });
+
 
     }catch (err){
-
+        next('err')
     }
 }
 
