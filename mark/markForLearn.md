@@ -34,3 +34,8 @@ Header.Payload.Signature
 > get put delete幂等
 > post 不是幂等
 > patch相当于对资源的一部分更新,不是幂等的,造成多种操作效果
+
+## slug
+> Slug是互联网上的一种简短的,可读性较高的URL,它可以帮助搜索引擎更好地理解网页内容,从而提高搜索结果的可读性和可访问性
+> 
+

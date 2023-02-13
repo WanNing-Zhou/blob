@@ -88,6 +88,7 @@ const cancelFollow = async (req, res, next) => {
 //获取用户信息: 用户信息 & 获取粉丝信息 & 判断是否关注
 const getProfile = async (req,res,next)=>{
     try{
+        //获取参数: 作者用户名
         const username = req.params.username;
         //根据用户名获取用户信息
         //查询用户所有粉丝
@@ -103,16 +104,31 @@ const getProfile = async (req,res,next)=>{
         }
         // console.log(userToFollow);
         //是否关注
+        //验证是否关注
+        // 当前登录粉丝 email: 通过token
+        //   是否关注:判断 当前登录的用户email是否在作者的所有粉丝的emails里面
+        const {email} = req.user
         let followingUser = false;
+        let followers = []
         if(req.user){ //如果用户身份认证成功
             //遍历
             for (let  t of userToFollow.followers){
-                if (t.dataValues.email === req.user.email){
+                if (t.dataValues.email === email){
                     followingUser = true;
-                    break;
                 }
+
+                delete userToFollow.dataValues.password;
+                delete userToFollow.dataValues.followers;
+                followers.push(userToFollow.dataValues)
+
             }
         }
+
+
+        //返回被关注者的信息
+        //  基本信息
+        // 关注状态
+        //粉丝西悉尼
         const profile = {
             username,
             bio:userToFollow.dataValues.bio,
