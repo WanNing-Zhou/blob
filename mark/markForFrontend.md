@@ -54,12 +54,12 @@ ReactDOM.render(<App/>, document.getElementById('root'));
 ```
 > 7. 使用`npm start`启动前端服务, [如果有yarn环境可以使用`yarn start` 启动也是可以地, 如果是两个环境都有,建议使用npm或yarn的一种进行依赖下载,否则可能会出现找不到依赖的情况]
 
-- 启动服务页面展示
+- 启动服务页面展示  
 ![项目首次启动](1_1.png)
   
 > 8. 新建一个终端使用`npm i react-router-dom@5` 命令下载5版本的路由
 
-> 9. 在src目录下创建以下文件夹 以及 文件
+> 9. 在src目录下创建以下文件夹 以及 文件  
 ![src下需创建](1_2.png)
 > 10. 使用路由 
 
@@ -81,7 +81,7 @@ ReactDOM.render(
 );
 ```
 
-> 11. 在`components` 与 `pages` 创建如下文件夹以及文件
+> 11. 在`components` 与 `pages` 创建如下文件夹以及文件  
 ![img_2.png](img_2.png)
 
 - 新建文件内容如以下形式,记得修改 ***类名***
@@ -131,9 +131,9 @@ export default App;
 
 ```
 - 效果展示
-    - `http://localhost:3000`
+    - `http://localhost:3000`  
 ![img_3.png](img_3.png)
-    - `http://localhost:3000/login`
+    - `http://localhost:3000/login`  
 ![img_4.png](img_4.png)
 
 > 13. 优化: 使用`PureComponent`代替使用`Component`
@@ -197,7 +197,7 @@ function App() {
 
 ```
 
-- 效果展示
+- 效果展示  
 ![img_5.png](img_5.png)
 
 > 15. 终端进入`backend`目录,使用`npm start`命令运行后端服务,修改前端`public/index.html`,将样式引入到前端index.html文件中
@@ -315,8 +315,8 @@ export default class Header extends PureComponent {
     }
 }
 ```
-- 效果展示
-![img_6.png](img_6.png)
+- 效果展示  
+![img_6.png](img_6.png) 
 
 
 
