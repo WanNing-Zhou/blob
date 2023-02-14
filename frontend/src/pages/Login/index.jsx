@@ -1,13 +1,13 @@
-import React, {Component} from 'react';
+import React, {PureComponent} from 'react';
 
-export default class Login extends Component {
+export default class Login extends PureComponent {
 
     state = {};
 
     render() {
         return (
             <div>
-
+                login
             </div>
         )
     }
