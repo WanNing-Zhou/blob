@@ -573,7 +573,7 @@ let createRootReducer = (history) => combineReducers({
 export default createRootReducer;
 ```
 
-- src/store/reducers/user.js
+- src/store/reducers/regist.js
 
 ```js
 import * as constant from '../../constant'
@@ -601,7 +601,7 @@ const userReducer = (state = initState, action) => {
 export default userReducer
 ```
 
-- src/actions/user.js
+- src/actions/regist.js
 
 ```js
 import * as constant from '../constant'
@@ -821,9 +821,9 @@ export default {
 
 ```
 
-> 2. 封装用户请求 `src/request`目录下创建 `user.js`
+> 2. 封装用户请求 `src/request`目录下创建 `regist.js`
 
-- user.js
+- regist.js
 ```js
 import apiClient from "./apiClient";
 

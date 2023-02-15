@@ -2,8 +2,7 @@ import React, {PureComponent} from 'react';
 import {Link} from 'react-router-dom'
 import Errors from '../../components/Errors'
 import {connect} from "react-redux";
-import * as action from '../../actions/user'
-import {registFiledUpdate,registSubmit} from "../../actions/user";
+import {registFiledUpdate,registSubmit,registUnload} from "../../actions/user";
 
  class Regist extends PureComponent {
 
@@ -11,9 +10,14 @@ import {registFiledUpdate,registSubmit} from "../../actions/user";
         e.preventDefault(); //阻止默认行为
         const {email,username,password} = this.props;
         this.props.registSubmit({email,username,password})
+
+    }
+    //组件将要卸载的时候调用
+    componentWillUnmount() {
+        this.props.registUnload();
     }
 
-    changeEmail = (e)=>{
+     changeEmail = (e)=>{
         this.props.registFiledUpdate("email", e.target.value)
     }
 
@@ -86,4 +90,4 @@ const mapState = state =>({
     ...state.user
 })
 
-export default connect(mapState,{registFiledUpdate,registSubmit})(Regist)
+export default connect(mapState,{registFiledUpdate,registSubmit,registUnload})(Regist)

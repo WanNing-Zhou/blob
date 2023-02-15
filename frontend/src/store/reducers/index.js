@@ -1,9 +1,13 @@
 import {connectRouter} from 'connected-react-router'
 import {combineReducers} from 'redux'
-import userReducer from "./user";
+import regist from "./user/regist";
+import login from "./user/login";
 
 let createRootReducer=(history)=>combineReducers({
-    user:userReducer,
+    user:combineReducers({
+        login,
+        regist
+    }),
     router:connectRouter(history)
 })
 

@@ -4,30 +4,40 @@ import {connect} from 'react-redux'
 import {store} from '../../store'
 import {replace} from 'connected-react-router'
 import Errors from "../../components/Errors";
-import {registFiledUpdate} from '../../actions/user'
+import {loginSubmit, loginFiledUpdate, loginUnload} from '../../actions/user'
 
 class Login extends PureComponent {
 
     state = {};
 
+    //当页面更新的时候
+    componentDidUpdate(prevProps, prevState, snapshot) {
+        if (this.props.redirect && this.props.redirect !== preProps.redirect) {
+            store.dispatch(replace(this.props.redirect))
+        }
+    }
 
+    componentWillUnmount() {
+        this.props.onUnload()
+    }
 
     changeEmail = (e) => {
-        // this.props.onEmailChange("email", e.target.value)
+        this.props.loginFiledUpdate("email", e.target.value)
     }
 
     changePassword = (e) => {
-        // this.props.onUserPassword("password", e.target.value)
+        this.props.loginFiledUpdate("password", e.target.value)
     }
 
     onSubmit = (e) => {
         e.preventDefault()
-        const { email, password } = this.props
-        // this.props.onSubmit(email, password)
+        const {email, password} = this.props
+        this.props.loginSubmit(email, password)
     }
 
+
     render() {
-        const { email, password, errors } = this.props
+        const {email, password, errors} = this.props
         return (
             <div className='container page'>
                 <div className='row'>
@@ -38,7 +48,7 @@ class Login extends PureComponent {
                                 没有账号直接注册？
                             </Link>
                         </p>
-                        <Errors errors={errors} />
+                        <Errors errors={errors}/>
                         <form onSubmit={this.onSubmit}>
                             <fieldset className='form-group'>
                                 <input
@@ -78,5 +88,4 @@ const mapState = state => ({
 })
 
 
-
-export default connect(mapState, {})(Login)
+export default connect(mapState, {loginFiledUpdate, loginSubmit, loginUnload})(Login)
