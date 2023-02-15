@@ -3,12 +3,14 @@ import {Link} from 'react-router-dom'
 import Errors from '../../components/Errors'
 import {connect} from "react-redux";
 import * as action from '../../actions/user'
-import {registFiledUpdate} from "../../actions/user";
+import {registFiledUpdate,registSubmit} from "../../actions/user";
 
  class Regist extends PureComponent {
 
     onSubmit = (e)=>{
         e.preventDefault(); //阻止默认行为
+        const {email,username,password} = this.props;
+        this.props.registSubmit({email,username,password})
     }
 
     changeEmail = (e)=>{
@@ -84,4 +86,4 @@ const mapState = state =>({
     ...state.user
 })
 
-export default connect(mapState,{registFiledUpdate})(Regist)
+export default connect(mapState,{registFiledUpdate,registSubmit})(Regist)

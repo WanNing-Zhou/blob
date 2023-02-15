@@ -729,3 +729,126 @@ import Errors from '../../components/Errors'
 
 + export default connect(mapState,{registFiledUpdate})(Regist)
 ```
+# 封装请求,模块化reducer
+
+> 1. 封装请求方法: 在`src/request`目录下创建 `apiClien.js` 文件
+
+```js
+//地址
+const baseURL = "http://localhost:8000/api/v1"
+//请求方法
+const method = {
+    GET: 'GET',
+    POST: 'POST',
+    PUT: 'PUT',
+    DELETE: 'DELETE'
+}
+//请求头
+const contentType = {
+    JSON: 'application/json;charset=UTF-8',
+    FORM: 'application/x-www-form-urlencoded;charset=UTF-8'
+}
+
+const getHeaders = () => {
+    const token = '';
+    const headers = {
+        "Content-Type": contentType.JSON,
+        "Authorization": `Token ${token}`
+    };
+    return headers;
+}
+/**
+ * get请求
+ * @param url 请求地址
+ * @returns {Promise<any>}
+ */
+const getRequest = async (url) => {
+    const response = await fetch(baseURL+url,{
+        method:method.GET,
+        headers:getHeaders()
+    })
+    return response.json();
+}
+
+/**
+ * post请求
+ * @param url 请求地址
+ * @param body 请求体
+ * @returns {Promise<any>}
+ */
+const postRequest = async (url,body) => {
+    const response = await fetch(baseURL+url,{
+        method:method.POST,
+        headers:getHeaders(),
+        body:JSON.stringify(body)
+    })
+    return response.json();
+}
+/**
+ * put请求
+ * @param url 地址
+ * @param body 请求体
+ * @returns {Promise<any>}
+ */
+const putRequest = async (url,body) => {
+    const response = await fetch(baseURL+url,{
+        method:method.PUT,
+        headers:getHeaders(),
+        body:JSON.stringify(body)
+    })
+    return response.json();
+}
+/**
+ * delete请求
+ * @param url 请求地址
+ * @returns {Promise<any>}
+ */
+const deleteRequest = async (url) => {
+    const response = await fetch(baseURL+url,{
+        method:method.DELETE,
+        headers:getHeaders(),
+    })
+    return response.json();
+}
+
+
+export default {
+    get:getRequest,
+    post:postRequest,
+    put:putRequest,
+    delete:deleteRequest
+}
+
+```
+
+> 2. 封装用户请求 `src/request`目录下创建 `user.js`
+
+- user.js
+```js
+import apiClient from "./apiClient";
+
+export default {
+    /**
+     * 用户注册
+     * @param user 用户对象
+     */
+    regist:(user)=>{apiClient.post('/users',{user})},
+    /**
+     * 用户登录
+     * @param email 邮箱
+     * @param password 密码
+     */
+    login:(email,password)=>{apiClient.post('/users/login',{user:{email,password}})},
+    /**
+     * 获取用户
+     * @param username 用户名
+     */
+    get:(username,)=>{apiClient.get('/users/'+username)},
+    /**
+     * 用户更新
+     * @param user 用户对象
+     */
+    update:(user)=>{apiClient.put('/users',{user})},
+}
+```
+
