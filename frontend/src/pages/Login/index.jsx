@@ -1,23 +1,29 @@
 import React, {PureComponent} from 'react';
 import {Link} from 'react-router-dom'
+import {connect} from 'react-redux'
+import {store} from '../../store'
+import {replace} from 'connected-react-router'
 import Errors from "../../components/Errors";
+import {registFiledUpdate} from '../../actions/user'
 
-export default class Login extends PureComponent {
+class Login extends PureComponent {
 
     state = {};
 
+
+
     changeEmail = (e) => {
-        this.props.onEmailChange("email", e.target.value)
+        // this.props.onEmailChange("email", e.target.value)
     }
 
     changePassword = (e) => {
-        this.props.onUserPassword("password", e.target.value)
+        // this.props.onUserPassword("password", e.target.value)
     }
 
     onSubmit = (e) => {
         e.preventDefault()
         const { email, password } = this.props
-        this.props.onSubmit(email, password)
+        // this.props.onSubmit(email, password)
     }
 
     render() {
@@ -65,3 +71,12 @@ export default class Login extends PureComponent {
         )
     }
 }
+
+
+const mapState = state => ({
+    ...state.user.login
+})
+
+
+
+export default connect(mapState, {})(Login)

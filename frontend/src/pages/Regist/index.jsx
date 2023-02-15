@@ -1,32 +1,27 @@
 import React, {PureComponent} from 'react';
 import {Link} from 'react-router-dom'
 import Errors from '../../components/Errors'
+import {connect} from "react-redux";
+import * as action from '../../actions/user'
+import {registFiledUpdate} from "../../actions/user";
 
-export default class Regist extends PureComponent {
-    state = {
-        email:'你的邮箱',
-        username:'你的名称',
-        password:'',
-        errors:{
-            message : '网络错误'
-        }
-    };
+ class Regist extends PureComponent {
 
     onSubmit = (e)=>{
         e.preventDefault(); //阻止默认行为
     }
 
     changeEmail = (e)=>{
-        this.setState({email:e.target.value})
+        this.props.registFiledUpdate("email", e.target.value)
     }
 
     changeUserName = (e) =>{
-        this.setState({username:e.target.value})
+        this.props.registFiledUpdate("username", e.target.value)
 
     }
 
     changePassword = (e)=>{
-        this.setState({password:e.target.value})
+        this.props.registFiledUpdate("password", e.target.value)
 
     }
 
@@ -42,7 +37,7 @@ export default class Regist extends PureComponent {
                                 有账号直接登录？
                             </Link>
                         </p>
-                        <Errors errors={this.state.errors.message}/>
+                        <Errors errors={errors}/>
                         <form onSubmit={this.onSubmit}>
                             <fieldset className='form-group'>
                                 <input
@@ -84,3 +79,9 @@ export default class Regist extends PureComponent {
         )
     }
 }
+
+const mapState = state =>({
+    ...state.user
+})
+
+export default connect(mapState,{registFiledUpdate})(Regist)

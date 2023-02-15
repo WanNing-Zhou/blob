@@ -1,0 +1,2 @@
+//注册
+export const USER_REGIST_FIELD="USER_REGIST_FIELD"

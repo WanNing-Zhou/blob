@@ -148,7 +148,9 @@ export default App;
 > 13. 优化: 使用`PureComponent`代替使用`Component`
 >   - `PureComponent`的作用
       >
-- 当使用`Component`时,使用`setState()`进行更改时会调用`render`函数引发更新; 如果更新后的`state`与更新前的`state`是相同的,那么此次更新是不必要的,使用`PureComponent`如果组件状态没有改变就不会引发更新. 这种减少渲染次数的优化可以明显提升应用程序性能和体验。
+
+- 当使用`Component`时,使用`setState()`进行更改时会调用`render`函数引发更新; 如果更新后的`state`与更新前的`state`是相同的,那么此次更新是不必要的,使用`PureComponent`
+  如果组件状态没有改变就不会引发更新. 这种减少渲染次数的优化可以明显提升应用程序性能和体验。
 
 - 把所有使用Component的文件做如下更改
 - 如 `src/components/Header/index.jsx`
@@ -523,9 +525,207 @@ export default class Regist extends PureComponent {
 }
 
 ```
+
 - 效果显示
 
 ![img_7.png](img_7.png)
 
+> 5. 控制台输入命令`npm i redux history redux-thunk connected-react-router react-redux` 下载相关依赖
 
-        
+> 6. 在store下创建如下文件(图片所示),添加constant中的常量,在actions目录下创建user.js文件
+
+![img_8.png](img_8.png)
+
+- src/store/index.js
+
+```js
+import {legacy_createStore, applyMiddleware} from 'redux'
+import thunk from "redux-thunk";
+import {createBrowserHistory} from 'history'
+import {routerMiddleware} from 'connected-react-router'
+import createRootReducer from './reducers/index'
+
+export const history = createBrowserHistory()
+//暴露store
+export const store = legacy_createStore(createRootReducer(history), applyMiddleware(routerMiddleware(history), thunk))
+```
+
+- src/constant.js
+
+```js
+//注册
+export const USER_REGIST_FIELD = "USER_REGIST_FIELD"
+
+```
+
+- src/store/reducers/index.js
+
+```js
+import {connectRouter} from 'connected-react-router'
+import {combineReducers} from 'redux'
+import userReducer from "./user";
+
+let createRootReducer = (history) => combineReducers({
+    user: userReducer,
+    router: connectRouter(history)
+})
+
+export default createRootReducer;
+```
+
+- src/store/reducers/user.js
+
+```js
+import * as constant from '../../constant'
+
+const initState = {
+    email: '',
+    username: '',
+    password: '',
+    errors: null
+}
+
+const userReducer = (state = initState, action) => {
+    switch (action.type) {
+        case constant.USER_REGIST_FIELD:
+            const key = action.key;
+            const value = action.value;
+            // console.log(key,value,'reducer')
+            return {...state, [key]: value};
+            break;
+        default:
+            return state;
+    }
+}
+
+export default userReducer
+```
+
+- src/actions/user.js
+
+```js
+import * as constant from '../constant'
+
+export const registFiledUpdate = (key, value) => {
+    return {type: constant.USER_REGIST_FIELD, key, value}
+}
+```
+
+> 7. 使用redux
+
+- src/index.js
+
+```jsx
+
+import React from 'react';
+import ReactDOM from 'react-dom';
+import App from './App';
++ import {Route, Switch} from 'react-router-dom'
++ import {ConnectedRouter} from 'connected-react-router'
++ import {Provider} from 'react-redux'
++ import {store, history} from "./store";
+
+ReactDOM.render(
++     <Provider store={store}>
++        <ConnectedRouter history={history}>
+            <Switch>
+                <Route path={'/'} component={App}/>
+            </Switch>
++        </ConnectedRouter>
++    </Provider>,
+    document.getElementById('root')
+);
+
+```
+
+- src/pages/Regist/index.jsx
+
+```jsx
+import React, {PureComponent} from 'react';
+import {Link} from 'react-router-dom'
+import Errors from '../../components/Errors'
++ import {connect} from "react-redux";
++ import * as action from '../../actions/user'
++ import {registFiledUpdate} from "../../actions/user";
+
++ class Regist extends PureComponent {
+
+    onSubmit = (e)=>{
+        e.preventDefault(); //阻止默认行为
+    }
+
+    changeEmail = (e)=>{
++        this.props.registFiledUpdate("email", e.target.value)
+    }
+
+    changeUserName = (e) =>{
++        this.props.registFiledUpdate("username", e.target.value)
+
+    }
+
+    changePassword = (e)=>{
++         this.props.registFiledUpdate("password", e.target.value)
+
+    }
+
+    render() {
++         const {email, username, password, errors} = this.props
+        return (
+            <div className='container page'>
+                <div className='row'>
+                    <div className='col-md-6 offset-md-3 col-xs-12'>
+                        <h1>注册</h1>
+                        <p className='text-xs-center'>
+                            <Link to="/login">
+                                有账号直接登录？
+                            </Link>
+                        </p>
+                        <Errors errors={errors}/>
+                        <form onSubmit={this.onSubmit}>
+                            <fieldset className='form-group'>
+                                <input
+                                    className='form-control form-control-lg'
+                                    type="text"
+                                    placeholder='用户邮箱'
+                                    value={email}
+                                    onChange={this.changeEmail}
+                                />
+                            </fieldset>
+                            <fieldset className='form-group'>
+                                <input
+                                    className='form-control form-control-lg'
+                                    type="text"
+                                    placeholder='用户名称'
+                                    value={username}
+                                    onChange={this.changeUserName}
+                                />
+                            </fieldset>
+                            <fieldset className='form-group'>
+                                <input
+                                    className='form-control form-control-lg'
+                                    type="password"
+                                    placeholder='用户密码'
+                                    value={password}
+                                    onChange={this.changePassword}
+                                />
+                            </fieldset>
+                            <button
+                                className='btn btn-lg btn-primary pull-xs-right'
+                                type='submit'
+                            >
+                                注册
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        )
+    }
+}
+
++ const mapState = state =>({
++    ...state.user
++ })
+
++ export default connect(mapState,{registFiledUpdate})(Regist)
+```
