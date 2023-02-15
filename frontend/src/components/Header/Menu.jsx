@@ -1,8 +1,9 @@
-import { memo } from "react";
-import { Link } from "react-router-dom";
+import {memo} from "react";
+import {Link} from "react-router-dom";
 
 const Menu = memo(props => {
-    const { currentUser } = props
+    const {currentUser} = props
+    // console.log("menu", currentUser);
     if (currentUser) {
         return (
             <ul className="nav navbar-nav pull-xs-right">
@@ -24,7 +25,7 @@ const Menu = memo(props => {
                 <li className="nav-item">
                     <Link to={`/profile/${currentUser.username}`} className="nav-link">
                         <img src={currentUser.avatar || "http://localhost:8000/default.png"}
-                             alt="" className="user-pic" />
+                             alt="" className="user-pic"/>
                     </Link>
                 </li>
             </ul>

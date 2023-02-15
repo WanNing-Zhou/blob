@@ -10,14 +10,14 @@ export default class Header extends PureComponent {
 
     render() {
         return (
-            <nav className="navbar navbar-light">
-                {/*左侧*/}
+            <nav className="navbar navbarlight">
+                {/* 左侧 */}
                 <div className="container">
-                    <Link to={'/'} className="navbar-brand">
+                    <Link to={"/"} className="navbar-brand">
                         BLOG-V1
                     </Link>
-                    {/*右侧*/}
-                    <Menu currentUser={currentUser}/>
+                    {/* 右侧 */}
+                    <Menu currentUser={null} />
                 </div>
             </nav>
         )
