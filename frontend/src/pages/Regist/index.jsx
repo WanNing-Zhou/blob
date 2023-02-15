@@ -14,7 +14,7 @@ import {registFiledUpdate,registSubmit,registUnload} from "../../actions/user";
     }
     //组件将要卸载的时候调用
     componentWillUnmount() {
-        this.props.registUnload();
+        this.props.registUnload(); //清空用户注册时的表单
     }
 
      changeEmail = (e)=>{

@@ -8,7 +8,7 @@ const initState = {
 }
 
 /**
- * 处理同步信息
+ * 操作注册时状态的改变
  * @param state
  * @param action
  * @returns {{password: string, email: string, errors: null, username: string}}
@@ -28,7 +28,5 @@ const userReducer = (state = initState, action) => {
             return state;
     }
 }
-
-
 
 export default userReducer

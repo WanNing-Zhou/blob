@@ -1,4 +1,4 @@
-import React, {Component} from 'react';
+import React from 'react';
 
 const Errors = (({ errors })=>{
     if(!errors){
@@ -10,7 +10,6 @@ const Errors = (({ errors })=>{
             <li>{errors}</li>
         </ul>
     )
-
 })
 
 export default Errors;

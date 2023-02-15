@@ -821,9 +821,9 @@ export default {
 
 ```
 
-> 2. 封装用户请求 `src/request`目录下创建 `regist.js`
+> 2. 封装用户请求 `src/request`目录下创建 `user.js`
 
-- regist.js
+- src/request/user.js
 ```js
 import apiClient from "./apiClient";
 
@@ -832,23 +832,451 @@ export default {
      * 用户注册
      * @param user 用户对象
      */
-    regist:(user)=>{apiClient.post('/users',{user})},
+    regist:(user)=>apiClient.post('/users',{user}),
     /**
      * 用户登录
      * @param email 邮箱
      * @param password 密码
      */
-    login:(email,password)=>{apiClient.post('/users/login',{user:{email,password}})},
+    login:(email,password)=>apiClient.post('/users/login',{user:{email,password}}),
     /**
      * 获取用户
      * @param username 用户名
      */
-    get:(username,)=>{apiClient.get('/users/'+username)},
+    get:(username)=>apiClient.get('/users/'+username),
     /**
      * 用户更新
      * @param user 用户对象
      */
-    update:(user)=>{apiClient.put('/users',{user})},
+    update:(user)=>apiClient.put('/users',{user}),
 }
 ```
+
+> 3. 在 `src/constant.js`中添加新的常量
+```js
+//用户注册
+export const USER_REGIST_FIELD = "USER_REGIST_FIELD";//用户注册信息同步
+export const USER_REGIST_RESULT = "USER_REGIST_RESULT"//用户注册结果
+export const USER_REGIST_UNLOAD = "USER_REGIST_UNLOAD" //注册组件卸载
+
+// 登录
+export const USER_LOGIN_FIELD = "USER_LOGIN_FIELD"  //用户登录状态同步
+export const USER_LOGIN_RESULT = "USER_LOGIN_RESULT" //用户登录结果
+export const USER_LOGIN_UNLOAD = "USER_LOGIN_UNLOAD" //登录组件卸载
+
+//
+
+```
+> 4. 在actions中添加异步注册的action以及删除注册后清空状态的action
+
+```js
+import * as constant from '../constant'
+import request from '../request'
+import {push} from 'connected-react-router'
+
+//注册同步
+export const registFiledUpdate = (key, value) => {
+    return {type: constant.USER_REGIST_FIELD, key, value}
+}
+
+//注册提交
+export const registSubmit = (user) => {
+    // let {email,username,password } = user;
+    console.log(user)
+    return async (dispatch, getState) => {
+        try {
+            let result = await request.user.regist(user)
+            // console.log('res',result)
+            if (result.status === 1) {
+                dispatch(push('/login'))
+            }else {
+                dispatch({
+                    type: constant.USER_REGIST_RESULT,
+                    result
+                })
+            }
+        } catch (error) {
+            // console.log(error)
+            dispatch({
+                type: constant.USER_REGIST_RESULT,
+                result: {status: 0, message: error.message, errors: error}
+            })
+        }
+    }
+}
+
+/**
+ * 注册清空
+ * @returns {{type: string}}
+ */
+export const registUnload = () => {
+    return { type: constant.USER_REGIST_UNLOAD }
+}
+
+
+/**
+ * 登录同步
+ * @param key
+ * @param value
+ * @returns {{type: string, value, key}}
+ */
+export const loginFiledUpdate = (key, value) => {
+    return { type: constant.USER_LOGIN_FIELD, key, value }
+}
+
+// 登录  提交
+export const loginSubmit = (email, password) => {
+    return async (dispatch, getState) => {
+        try {
+            let result = await request.user.login(email, password)
+            console.log(result, "result--action");
+            dispatch({
+                type: constant.USER_LOGIN_RESULT,
+                result
+            })
+        } catch (error) {
+            dispatch({
+                type: constant.USER_LOGIN_RESULT,
+                result: {
+                    status: 0,
+                    message: error.message,
+                    errors: error.errors
+                }
+            })
+        }
+    }
+}
+
+/**
+ * 登录清空
+ * @returns {{type: string}}
+ */
+export const loginUnload = () => {
+    return { type: constant.USER_LOGIN_UNLOAD }
+}
+
+
+```
+> 5. 将用户的reducer重新封装, 并在 `src/store/reducers/index.js`中重新引用
+
+![img_9.png](img_9.png)
+
+- src/store/reducers/user/regist.js
+
+```js
+import * as constant from '../../../constant'
+
+const initState = {
+    email: '',
+    username: '',
+    password: '',
+    errors: null
+}
+
+/**
+ * 操作注册时状态的改变
+ * @param state
+ * @param action
+ * @returns {{password: string, email: string, errors: null, username: string}}
+ */
+const userReducer = (state = initState, action) => {
+    switch (action.type) {
+        case constant.USER_REGIST_FIELD:
+            const key = action.key;
+            const value = action.value;
+            // console.log(key,value,'reducer')
+            return {...state, [key]: value};
+        case constant.USER_REGIST_RESULT:
+            return {...state,errors:action.result.message}
+        case constant.USER_REGIST_UNLOAD:
+            return {...initState}
+        default:
+            return state;
+    }
+}
+
+export default userReducer
+```
+- src/store/reducers/user/login.js
+
+```js
+import * as constant from "../../../constant"
+import { saveDate, getDate } from "../../../utils/localStorage"
+
+const initUser = () => {
+    const currentUser = getDate("currentUser")
+    // console.log("reducer",currentUser);
+    if (currentUser) {
+        return currentUser
+    }
+    return null
+}
+
+const initState = {
+    email: "",
+    username: "",
+    password: "",
+    errors: null,
+    currentUser: initUser(), //当前用户
+    token: null,
+    avatar: null
+}
+
+/**
+ * 操作登录时的用户状态
+ * @param state
+ * @param action
+ * @returns {{password: string, currentUser: any, avatar: null, email: string, errors: null, username: string, token: null}|(*&{redirect: string, password: string, currentUser: any, avatar: null, email: string, errors: null, username: string, token: null})|{password: string, currentUser: any, avatar: null, email: string, errors, username: string, token: null}}
+ */
+
+const loginReducer = (state = initState, action) => {
+    switch (action.type) {
+        case constant.USER_LOGIN_FIELD:
+            const key = action.key
+            const value = action.value
+            // console.log(key,value,"reducer----");
+            return { ...state, [key]: value };
+        case constant.USER_LOGIN_UNLOAD:
+            return { ...initState, currentUser: initUser() } //登录组件卸载时,清空组件中的内容,并将正在在登陆的用户保存在state中
+        case constant.USER_LOGIN_RESULT:
+            const { status, message, data } = action.result
+            if (status === 1) {
+                let currentUser = data
+                let token = data.token
+                saveDate("currentUser", currentUser) //存储当前用户
+                saveDate("token", token) //存储token
+                return { ...state, ...data, redirect: "/" } //redirect是要跳转到路由
+            } else {
+                return { ...state, errors: message }
+            }
+        default:
+            return state;
+    }
+}
+
+export default loginReducer
+
+```
+- src/store/reducers/index.js
+
+```js
+import {connectRouter} from 'connected-react-router'
+import {combineReducers} from 'redux'
+import regist from "./user/regist";
+import login from "./user/login";
+
+let createRootReducer=(history)=>combineReducers({
+    user:combineReducers({
+        login,
+        regist
+    }),
+    router:connectRouter(history)
+})
+
+export default createRootReducer;
+```
+
+> 6. 在注册组件以及登录组件中使用redux
+
+- src/pages/Regist/index.jsx
+
+```jsx
+import React, {PureComponent} from 'react';
+import {Link} from 'react-router-dom'
+import Errors from '../../components/Errors'
+import {connect} from "react-redux";
++ import {registFiledUpdate,registSubmit,registUnload} from "../../actions/user";
+
+ class Regist extends PureComponent {
+
++    onSubmit = (e)=>{
++        e.preventDefault(); //阻止默认行为
++        const {email,username,password} = this.props;
++        this.props.registSubmit({email,username,password})
+
+    }
+    //组件将要卸载的时候调用
++    componentWillUnmount() {
++        this.props.registUnload(); //清空用户注册时的表单
++    }
+
+     changeEmail = (e)=>{
+        this.props.registFiledUpdate("email", e.target.value)
+    }
+
+    changeUserName = (e) =>{
+        this.props.registFiledUpdate("username", e.target.value)
+
+    }
+
+    changePassword = (e)=>{
+        this.props.registFiledUpdate("password", e.target.value)
+
+    }
+
+    render() {
+        const {email, username, password, errors} = this.props
+        return (
+            <div className='container page'>
+                <div className='row'>
+                    <div className='col-md-6 offset-md-3 col-xs-12'>
+                        <h1>注册</h1>
+                        <p className='text-xs-center'>
+                            <Link to="/login">
+                                有账号直接登录？
+                            </Link>
+                        </p>
+                        <Errors errors={errors}/>
+                        <form onSubmit={this.onSubmit}>
+                            <fieldset className='form-group'>
+                                <input
+                                    className='form-control form-control-lg'
+                                    type="text"
+                                    placeholder='用户邮箱'
+                                    value={email}
+                                    onChange={this.changeEmail}
+                                />
+                            </fieldset>
+                            <fieldset className='form-group'>
+                                <input
+                                    className='form-control form-control-lg'
+                                    type="text"
+                                    placeholder='用户名称'
+                                    value={username}
+                                    onChange={this.changeUserName}
+                                />
+                            </fieldset>
+                            <fieldset className='form-group'>
+                                <input
+                                    className='form-control form-control-lg'
+                                    type="password"
+                                    placeholder='用户密码'
+                                    value={password}
+                                    onChange={this.changePassword}
+                                />
+                            </fieldset>
+                            <button
+                                className='btn btn-lg btn-primary pull-xs-right'
+                                type='submit'
+                            >
+                                注册
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        )
+    }
+}
+
+const mapState = state =>({
+    ...state.user
+})
+
++ export default connect(mapState,{registFiledUpdate,registSubmit,registUnload})(Regist)
+
+```
+
+- src/pages/Login/index.jsx
+```jsx
+import React, {PureComponent} from 'react';
+import {Link} from 'react-router-dom'
+import {connect} from 'react-redux'
+import {store} from '../../store'
+import {replace} from 'connected-react-router'
+import Errors from "../../components/Errors";
+import {loginSubmit, loginFiledUpdate, loginUnload} from '../../actions/user'
+
+class Login extends PureComponent {
+
+    state = {};
+
+    //当页面更新的时候
+    componentDidUpdate(prevProps, prevState, snapshot) {
+        if (this.props.redirect && this.props.redirect !== prevProps.redirect) {
+            store.dispatch(replace(this.props.redirect))
+        }
+    }
+
+    componentWillUnmount() {
+        this.props.loginUnload()
+    }
+
+    changeEmail = (e) => {
+        this.props.loginFiledUpdate("email", e.target.value)
+    }
+
+    changePassword = (e) => {
+        this.props.loginFiledUpdate("password", e.target.value)
+    }
+
+    onSubmit = (e) => {
+        e.preventDefault()
+        const {email, password} = this.props
+        this.props.loginSubmit(email, password)
+    }
+
+
+    render() {
+        const {email, password, errors} = this.props
+        return (
+            <div className='container page'>
+                <div className='row'>
+                    <div className='col-md-6 offset-md-3 col-xs-12'>
+                        <h1>登录</h1>
+                        <p className='text-xs-center'>
+                            <Link to="/regist">
+                                没有账号直接注册？
+                            </Link>
+                        </p>
+                        <Errors errors={errors}/>
+                        <form onSubmit={this.onSubmit}>
+                            <fieldset className='form-group'>
+                                <input
+                                    className='form-control form-control-lg'
+                                    type="text"
+                                    placeholder='用户邮箱'
+                                    value={email}
+                                    onChange={this.changeEmail}
+                                />
+                            </fieldset>
+                            <fieldset className='form-group'>
+                                <input
+                                    className='form-control form-control-lg'
+                                    type="password"
+                                    placeholder='用户密码'
+                                    value={password}
+                                    onChange={this.changePassword}
+                                />
+                            </fieldset>
+                            <button
+                                className='btn btn-lg btn-primary pull-xs-right'
+                                type='submit'
+                            >
+                                登录
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        )
+    }
+}
+
+
+const mapState = state => ({
+    ...state.user.login
+})
+
+
+export default connect(mapState, {loginFiledUpdate, loginSubmit, loginUnload})(Login)
+```
+
+> 7. 如果在路由跳转的时候发生以下错误,请检查`history`的版本
+>
+> `【React】Could not find router reducer in state tree....`  
+> 可能是由于history的最新版不兼容connect-react-router导致。  
+> 执行命令`npm i history@4`下载低版本的history进行使用
+
+> 8. 在浏览器中进行对注册功能以及登录功能的测试
 

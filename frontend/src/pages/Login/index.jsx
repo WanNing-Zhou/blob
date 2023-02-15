@@ -12,13 +12,13 @@ class Login extends PureComponent {
 
     //当页面更新的时候
     componentDidUpdate(prevProps, prevState, snapshot) {
-        if (this.props.redirect && this.props.redirect !== preProps.redirect) {
+        if (this.props.redirect && this.props.redirect !== prevProps.redirect) {
             store.dispatch(replace(this.props.redirect))
         }
     }
 
     componentWillUnmount() {
-        this.props.onUnload()
+        this.props.loginUnload()
     }
 
     changeEmail = (e) => {

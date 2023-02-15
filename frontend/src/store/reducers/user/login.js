@@ -15,10 +15,18 @@ const initState = {
     username: "",
     password: "",
     errors: null,
-    currentUser: initUser(),
+    currentUser: initUser(), //当前用户
     token: null,
     avatar: null
 }
+
+/**
+ * 操作登录时的用户状态
+ * @param state
+ * @param action
+ * @returns {{password: string, currentUser: any, avatar: null, email: string, errors: null, username: string, token: null}|(*&{redirect: string, password: string, currentUser: any, avatar: null, email: string, errors: null, username: string, token: null})|{password: string, currentUser: any, avatar: null, email: string, errors, username: string, token: null}}
+ */
+
 const loginReducer = (state = initState, action) => {
     switch (action.type) {
         case constant.USER_LOGIN_FIELD:
@@ -27,7 +35,7 @@ const loginReducer = (state = initState, action) => {
             // console.log(key,value,"reducer----");
             return { ...state, [key]: value };
         case constant.USER_LOGIN_UNLOAD:
-            return { ...initState, currentUser: initUser() }
+            return { ...initState, currentUser: initUser() } //登录组件卸载时,清空组件中的内容,并将正在在登陆的用户保存在state中
         case constant.USER_LOGIN_RESULT:
             const { status, message, data } = action.result
             if (status === 1) {
@@ -39,13 +47,6 @@ const loginReducer = (state = initState, action) => {
             } else {
                 return { ...state, errors: message }
             }
-        case constant.SETTING_LOGOUT:
-            state.currentUser = null
-            return { ...state }
-        case constant.SETTING_RESULT:
-            const avatar = getDate("currentUser").avatar
-            console.log(avatar,"11");
-            return { ...state,avatar: avatar }
         default:
             return state;
     }

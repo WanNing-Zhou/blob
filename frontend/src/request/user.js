@@ -16,7 +16,7 @@ export default {
      * 获取用户
      * @param username 用户名
      */
-    get:(username,)=>apiClient.get('/users/'+username),
+    get:(username)=>apiClient.get('/users/'+username),
     /**
      * 用户更新
      * @param user 用户对象
