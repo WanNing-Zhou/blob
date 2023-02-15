@@ -1,6 +1,6 @@
 import {memo} from "react";
 import {Link} from "react-router-dom";
-
+import {connect} from 'react-redux'
 const Menu = memo(props => {
     const {currentUser} = props
     // console.log("menu", currentUser);
@@ -53,4 +53,8 @@ const Menu = memo(props => {
     }
 })
 
-export default Menu
+const mapState= state=>({
+    currentUser: state.user.login.currentUser
+})
+
+export default connect(mapState,null)(Menu)
