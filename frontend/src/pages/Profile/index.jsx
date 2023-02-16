@@ -1,21 +1,33 @@
 import React, {PureComponent} from 'react';
 import {connect} from "react-redux";
 import ButtonInfo from "./ButtonInfo";
-import {getProfile,addFollow,deleteFollow} from "../../actions/profile";
+import {getProfile, addFollow, deleteFollow} from "../../actions/profile";
+import {getArticleByAuthor, getArticleByFavorite} from "../../actions/articles";
+import Articles from "../Articles";
 
 class Profile extends PureComponent {
 
     state = {};
 
     componentDidMount() {
-        let username = this.props.match.params.username;
-        this.props.getProfile(username);
+        let username = this.props.match.params.username
+
+        this.props.getProfile(username)
+
+        this.props.getArticleByAuthor(username)
+    }
+
+    componentDidUpdate(prevProps, prevState, snapshot) {
+        let username = this.props.match.params.username
+        if (username && username !== this.props.profile.username) {
+            this.props.getProfile(username)
+        }
     }
 
     render() {
-        const { profile, currentUser, onFollow, onUnFollow, articlesReducer } = this.props
+        const {profile, currentUser, addFollow, deleteFollow, articlesReducer} = this.props
         // console.log(articles);
-        // const {count,currentPage,articles} = articlesReducer
+        const {count, currentPage, articles} = articlesReducer
         // console.log(count);
         const isCurrentUser = currentUser && currentUser.username === profile.username
         return (
@@ -26,7 +38,7 @@ class Profile extends PureComponent {
                         <div className='row'>
                             <div className='col-md-10 offset-md-1 col-xs-12'>
                                 <img src={profile.avatar || "http://localhost:8000/default.png"}
-                                     style={{ width: 100, height: 100 }} alt="" />
+                                     style={{width: 100, height: 100}} alt=""/>
                                 <h4>{profile.username}</h4>
                                 <p>{profile.bio}</p>
 
@@ -52,8 +64,8 @@ class Profile extends PureComponent {
                                         <button className={this.state.tab === 1 ? "nav-link active" : "nav-link"}
                                                 onClick={
                                                     () => {
-                                                        this.setState({ tab: 1 })
-                                                        this.props.getArtcileByAuthor(profile.username)
+                                                        this.setState({tab: 1})
+                                                        this.props.getArticleByAuthor(profile.username)
                                                     }
                                                 }
                                         >
@@ -64,8 +76,8 @@ class Profile extends PureComponent {
                                         <button className={this.state.tab === 2 ? "nav-link active" : "nav-link"}
                                                 onClick={
                                                     () => {
-                                                        this.setState({ tab: 2 })
-                                                        this.props.getArtcileByFavorite(profile.username)
+                                                        this.setState({tab: 2})
+                                                        this.props.getArticleByFavorite(profile.username)
                                                     }
                                                 }
                                         >
@@ -76,12 +88,12 @@ class Profile extends PureComponent {
                             </div>
 
                             {/* 文章列表 */}
-                            {/*<Articles
+                            <Articles
                                 isShowPage={false}
                                 articles={articles}
                                 count={count}
                                 currentPage={currentPage}
-                            />*/}
+                            />
                         </div>
                     </div>
                 </div>
@@ -91,15 +103,19 @@ class Profile extends PureComponent {
 
 }
 
-const mapState = state =>({
+const mapState = state => ({
     profile: state.profile,
-    currentUser:state.user.login.currentUser,
+    currentUser: state.user.login.currentUser,
+    articlesReducer: state.articles
+
 })
 
-const mapDispatch={
+const mapDispatch = {
     getProfile,
     addFollow,
-    deleteFollow
+    deleteFollow,
+    getArticleByAuthor,
+    getArticleByFavorite
 }
 
-export default connect(mapState,mapDispatch)(Profile)
+export default connect(mapState, mapDispatch)(Profile)
