@@ -54,7 +54,8 @@ const Menu = memo(props => {
 })
 
 const mapState= state=>({
-    currentUser: state.user.login.currentUser
+    currentUser: state.user.login.currentUser,
+    avatar:state.user.login.avatar
 })
 
 export default connect(mapState,null)(Menu)

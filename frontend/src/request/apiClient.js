@@ -84,3 +84,5 @@ export default {
     put:putRequest,
     delete:deleteRequest
 }
+
+

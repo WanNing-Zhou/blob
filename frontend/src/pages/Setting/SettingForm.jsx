@@ -16,12 +16,16 @@ class SettingForm extends Component {
         this.props.settingFiledUpdate("bio", e.target.value)
     }
 
+    changePassword = (e) => {
+        this.props.settingFiledUpdate("password", e.target.value)
+    }
+
     /**
      * 提交更改
      * @param e
      */
     onSubmit = (e) => {
-        console.log('setting props', this.props)
+        // console.log('setting props', this.props)
         const {username, password, bio, avatar} = this.props
         this.props.settingSubmit({username, password, bio, avatar})
         e.preventDefault(); //阻止默认事件
@@ -29,10 +33,20 @@ class SettingForm extends Component {
     }
 
     render() {
-        const {username, password, bio, avatar} = this.props
+        const {email,username, password, bio, avatar} = this.props
         // console.log("setting props",this.props)
         return (
             <form onSubmit={this.onSubmit}>
+
+                <fieldset className='form-group'>
+                    <input
+                        className='form-control form-control-lg'
+                        type="text"
+                        placeholder='用户邮箱'
+                        value={email || ""}
+                        disabled
+                    />
+                </fieldset>
                 <fieldset className='form-group'>
                     <input
                         className='form-control form-control-lg'

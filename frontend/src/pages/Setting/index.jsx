@@ -53,6 +53,6 @@ const mapState = state => {
     }
 }
 
-const mapDispatch = dispatch => ({settingLogout, settingUnload})
+const mapDispatch = {settingLogout, settingUnload}
 
 export default connect(mapState, mapDispatch)(Setting)

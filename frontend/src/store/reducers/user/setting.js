@@ -57,7 +57,7 @@ const settingReducer = (state = initState, action) => {
             return {...state, redirect: '/login'} //更改成功回到login页面
         default:
             return {
-                ...initUser(),
+                ...initUser(), //初始化用户
                 errors: null,
                 currentUser: initUser(),
                 token: initToken()

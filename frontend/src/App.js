@@ -24,7 +24,7 @@ function App() {
 
                     <Route path={'/article/new'} component={ArticleNew} exact/>{/*exact 表示精确匹配*/}
                     <Route path={'/setting'} component={Setting} exact/>
-                    <Route path={"/profile"} component={Profile} exact/>
+                    <Route path={"/profile/:username"} component={Profile}/>
 
                 </Switch>
             </Suspense>

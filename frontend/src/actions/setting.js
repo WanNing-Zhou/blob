@@ -4,7 +4,7 @@ import request from "../request"
 
 // 设置  同步
 export const settingFiledUpdate = (key, value) => {
-    console.log('settingFileUpdate',key,value)
+    // console.log('settingFileUpdate',key,value)
     return { type: constant.SETTING_FIELD, key, value }
 }
 
@@ -18,7 +18,7 @@ export const settingSubmit = (user) => {
     return async (dispatch, getState) => {
         try {
             let result = await request.user.update(user)
-            console.log(result, "result--action");
+            // console.log(result, "result--action");
 
             if(result.status===1){
                 window.alert("用户更新成功")
