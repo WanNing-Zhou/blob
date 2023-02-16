@@ -4,6 +4,7 @@ import regist from "./user/regist";
 import login from "./user/login";
 import setting from "./user/setting";
 import profile from "./profile";
+import articles from "./articles";
 
 let createRootReducer=(history)=>combineReducers({
     user:combineReducers({
@@ -12,6 +13,7 @@ let createRootReducer=(history)=>combineReducers({
         setting
     }),
     profile,
+    articles,
     router:connectRouter(history)
 })
 
