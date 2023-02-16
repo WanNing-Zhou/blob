@@ -1,5 +1,6 @@
 import React, {PureComponent} from 'react';
 import {connect} from "react-redux";
+import ButtonInfo from "./ButtonInfo";
 
 class Profile extends PureComponent {
 
@@ -9,7 +10,7 @@ class Profile extends PureComponent {
     render() {
         const { profile, currentUser, onFollow, onUnFollow, articlesReducer } = this.props
         // console.log(articles);
-        const {count,currentPage,articles} = articlesReducer
+        // const {count,currentPage,articles} = articlesReducer
         // console.log(count);
         const isCurrentUser = currentUser && currentUser.username === profile.username
         return (
@@ -70,12 +71,12 @@ class Profile extends PureComponent {
                             </div>
 
                             {/* 文章列表 */}
-                            <Articles
+                            {/*<Articles
                                 isShowPage={false}
                                 articles={articles}
                                 count={count}
                                 currentPage={currentPage}
-                            />
+                            />*/}
                         </div>
                     </div>
                 </div>

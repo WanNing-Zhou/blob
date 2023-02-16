@@ -13,3 +13,7 @@ export const SETTING_FIELD = "SETTING_FIELD" //状态信息同步
 export const SETTING_UNLOAD = "SETTING_UNLOAD" //设置组件卸载
 export const SETTING_RESULT = "SETTING_RESULT" //设置结果返回
 export const SETTING_LOGOUT = "SETTING_LOGOUT" //退出设置
+
+// 用户中心
+export const PROFILE_GET_RESULT = "PROFILE_GET_RESULT" //获取用户信息结果
+export const PROFILE_FOLLOW_RESULT = "PROFILE_FOLLOW_RESULT"//获取用户关注结果
