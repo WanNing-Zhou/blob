@@ -1,6 +1,6 @@
 import React, {PureComponent} from 'react';
 
-export default class AritcleNew extends PureComponent {
+export default class ArticleNew extends PureComponent {
 
     state = {};
 
