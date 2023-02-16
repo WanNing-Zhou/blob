@@ -7,6 +7,10 @@ class Profile extends PureComponent {
 
     state = {};
 
+    componentDidMount() {
+        let username = this.props.match.params.username;
+        this.props.getProfile(username);
+    }
 
     render() {
         const { profile, currentUser, onFollow, onUnFollow, articlesReducer } = this.props
@@ -30,8 +34,8 @@ class Profile extends PureComponent {
                                 <ButtonInfo
                                     isCurrentUser={isCurrentUser}
                                     profile={profile}
-                                    follow={onFollow}
-                                    unfollow={onUnFollow}
+                                    follow={addFollow}
+                                    unfollow={deleteFollow}
                                 />
                             </div>
                         </div>
@@ -93,7 +97,9 @@ const mapState = state =>({
 })
 
 const mapDispatch={
-
+    getProfile,
+    addFollow,
+    deleteFollow
 }
 
 export default connect(mapState,mapDispatch)(Profile)

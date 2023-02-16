@@ -22,4 +22,17 @@ export default {
      * @param user 用户对象
      */
     update:(user)=>apiClient.put('/users',{user}),
+    /**
+     * 添加喜欢
+     * @param username 喜欢的用户的名称
+     * @returns {Promise<*>}
+     */
+    follow:(username)=>apiClient.post('/follow/'+username),
+
+    /**
+     * 取消喜欢
+     * @param username 取消喜欢的用户的名称
+     * @returns {Promise<*>}
+     */
+    unfollow:(username)=>apiClient.delete('/follow/'+username)
 }

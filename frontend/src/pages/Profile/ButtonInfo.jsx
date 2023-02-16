@@ -3,16 +3,16 @@ import {memo} from "react";
 import {Link} from 'react-router-dom'
 
 const ButtonInfo = memo((props)=> {
-    const {profile,isCurrentUser,follow,unfollow}=props
+    const {profile,isCurrentUser,addFollow,deleteFollow}=props
     const handleClick=(e)=>{
         e.preventDefault()//阻止默认事件
         if(profile.following){
-            unfollow(profile.username)
+            deleteFollow(profile.username)
         }else{
-            follow(profile.username)
+            addFollow(profile.username)
         }
     }
-    if (isCurrentUser) {
+    if (isCurrentUser) { //如果当前用户存在
         return (
             <Link to={"/setting"} className="btn btn-sm btn-outline-secondary action-btn">
                 <i className="iconfont icon-zhuanchezhuanyongbeifen"></i>{" "}编辑设置

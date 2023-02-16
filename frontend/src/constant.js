@@ -17,3 +17,7 @@ export const SETTING_LOGOUT = "SETTING_LOGOUT" //退出设置
 // 用户中心
 export const PROFILE_GET_RESULT = "PROFILE_GET_RESULT" //获取用户信息结果
 export const PROFILE_FOLLOW_RESULT = "PROFILE_FOLLOW_RESULT"//获取用户关注结果
+
+// 文章列表
+export const ARTICLE_AUTHOR_RESULT = "ARTICLE_AUTHOR_RESULT"
+export const LIMIT = 5
