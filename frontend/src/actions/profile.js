@@ -19,7 +19,11 @@ export const getProfile = (username) => {
         }
     }
 }
-
+/**
+ * 添加关注
+ * @param username
+ * @returns {(function(*, *): Promise<void>)|*}
+ */
 export const addFollow = (username) => {
     return async (dispatch, getState) => {
         try {
@@ -38,7 +42,11 @@ export const addFollow = (username) => {
         }
     }
 }
-
+/**
+ * 取消关注
+ * @param username
+ * @returns {(function(*, *): Promise<void>)|*}
+ */
 export const deleteFollow = (username) => {
     return async (dispatch, getState) => {
         try {

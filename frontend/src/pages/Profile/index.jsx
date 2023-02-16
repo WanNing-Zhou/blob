@@ -1,6 +1,7 @@
 import React, {PureComponent} from 'react';
 import {connect} from "react-redux";
 import ButtonInfo from "./ButtonInfo";
+import {getProfile,addFollow,deleteFollow} from "../../actions/profile";
 
 class Profile extends PureComponent {
 
@@ -87,6 +88,7 @@ class Profile extends PureComponent {
 }
 
 const mapState = state =>({
+    profile: state.profile,
     currentUser:state.user.login.currentUser,
 })
 

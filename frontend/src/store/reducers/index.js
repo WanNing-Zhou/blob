@@ -3,6 +3,7 @@ import {combineReducers} from 'redux'
 import regist from "./user/regist";
 import login from "./user/login";
 import setting from "./user/setting";
+import profile from "./profile";
 
 let createRootReducer=(history)=>combineReducers({
     user:combineReducers({
@@ -10,6 +11,7 @@ let createRootReducer=(history)=>combineReducers({
         regist,
         setting
     }),
+    profile,
     router:connectRouter(history)
 })
 
