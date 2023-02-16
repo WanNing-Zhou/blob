@@ -1,8 +1,8 @@
 import React, {PureComponent} from 'react';
 import {connect} from "react-redux";
-import  {} from '../../actions/article'
+import  {articleFiledUpdate,articleUnload,articleAddTag,articleRemoveTag,createArticle} from '../../actions/article'
 
-export default class ArticleNew extends PureComponent {
+class ArticleNew extends PureComponent {
     //状态: 主体同步
     changeBody = (e)=>{
 
@@ -119,3 +119,16 @@ export default class ArticleNew extends PureComponent {
         )
     }
 }
+const mapState = state=>({
+    ...state.article
+})
+
+const mapDispatch = dispatch =>({
+    articleFiledUpdate,
+    articleUnload,
+    articleAddTag,
+    articleRemoveTag,
+    createArticle
+})
+
+export default connect(mapState, mapDispatch)(ArticleNew)

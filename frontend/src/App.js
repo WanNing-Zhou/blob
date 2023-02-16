@@ -6,7 +6,7 @@ import Home from './pages/Home'
 
 const Login = lazy(()=>import("./pages/Login"))
 const Regist = lazy(()=>import("./pages/Regist"))
-const ArticleNew = lazy(()=>import('./pages/AritcleNew'))
+const ArticleNew = lazy(()=>import('./pages/ArticleNew'))
 const Setting = lazy(()=>import('./pages/Setting'))
 const Profile = lazy(()=>import('./pages/Profile'))
 
@@ -22,7 +22,7 @@ function App() {
                     <Route path={'/login'} component={Login} exact/>
                     <Route path={"/regist"} component={Regist} exact/>
 
-                    <Route path={'/article/new'} component={ArticleNew} exact/>{/*exact 表示精确匹配*/}
+                    <Route path={'/article/new'} component={ArticleNew} />{/*exact 表示精确匹配*/}
                     <Route path={'/setting'} component={Setting} exact/>
                     <Route path={"/profile/:username"} component={Profile}/>
 
