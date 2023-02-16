@@ -4,6 +4,7 @@ import {saveDate, getDate, deleteDate} from "../../../utils/localStorage"
 //初始化用户
 const initUser = () => {
     const currentUser = getDate("currentUser")
+    // console.log('初始化用户',currentUser)
     if (currentUser) {
         return currentUser
     }
@@ -19,6 +20,8 @@ const initToken = () => {
     return null
 }
 
+
+
 const initState = {
     ...initUser(),
     errors: null,
@@ -27,10 +30,12 @@ const initState = {
 }
 
 const settingReducer = (state = initState, action) => {
+
     switch (action.type) {
         case constant.SETTING_FIELD:
             const key = action.key
-            const value = action.valueOf
+            const value = action.value
+            console.log('reducer field state',key,value)
             return {...state, [key]: value};
         case constant.SETTING_UNLOAD:
             return {...initState, currentUser: initUser(), token: initToken()}
@@ -49,7 +54,7 @@ const settingReducer = (state = initState, action) => {
             state = {}
             deleteDate("currentUser");
             deleteDate("token");
-            return {...state, redirect: '/login'}
+            return {...state, redirect: '/login'} //更改成功回到login页面
         default:
             return {
                 ...initUser(),

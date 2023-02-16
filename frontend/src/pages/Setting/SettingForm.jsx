@@ -1,25 +1,36 @@
 import React, {Component} from 'react';
 import {connect} from "react-redux";
-
+import {settingSubmit, settingFiledUpdate, settingLogout, settingUnload} from "../../actions/setting";
 
 class SettingForm extends Component {
 
     state = {};
 
-    changeAvatar=(e)=>{
-
+    changeAvatar = (e) => {
+        // console.log(e.target.value)
+        this.props.settingFiledUpdate("avatar", e.target.value)
     }
 
-    changeBio=(e)=>{
 
+    changeBio = (e) => {
+        this.props.settingFiledUpdate("bio", e.target.value)
     }
 
-    onSubmit=(e)=>{
+    /**
+     * 提交更改
+     * @param e
+     */
+    onSubmit = (e) => {
+        console.log('setting props', this.props)
+        const {username, password, bio, avatar} = this.props
+        this.props.settingSubmit({username, password, bio, avatar})
+        e.preventDefault(); //阻止默认事件
 
     }
 
     render() {
-        const { username, password, bio, avatar } = this.props
+        const {username, password, bio, avatar} = this.props
+        // console.log("setting props",this.props)
         return (
             <form onSubmit={this.onSubmit}>
                 <fieldset className='form-group'>
@@ -75,8 +86,11 @@ const mapState = state => {
     }
 }
 
-const mapDispatch = dispatch => ({
-
-})
+const mapDispatch = {
+    settingFiledUpdate,
+    settingLogout,
+    settingUnload,
+    settingSubmit
+}
 
 export default connect(mapState, mapDispatch)(SettingForm)

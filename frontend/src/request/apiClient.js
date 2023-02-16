@@ -1,3 +1,5 @@
+import { getDate } from "../utils/localStorage"
+
 //地址
 const baseURL = "http://localhost:8000/api/v1"
 //请求方法
@@ -14,7 +16,7 @@ const contentType = {
 }
 
 const getHeaders = () => {
-    const token = '';
+    const token = getDate("token");
     const headers = {
         "Content-Type": contentType.JSON,
         "Authorization": `Token ${token}`

@@ -1,15 +1,27 @@
 import React, {PureComponent} from 'react';
-import Errors from "../../components/Errors";
-import {connect} from "react-redux";
-import {store} from "../../store";
 import {replace} from "connected-react-router";
+import {connect} from "react-redux";
+import Errors from "../../components/Errors";
+import {store} from "../../store";
 import SettingForm from "./SettingForm";
+import {settingLogout, settingUnload} from "../../actions/setting";
+
 class Setting extends PureComponent {
 
     state = {};
 
-    handlerClick = ()=>{
+    componentDidUpdate(prevProps, prevState, snapshot) {
+        if (this.props.redirect && this.props.redirect !== prevProps.redirect) {
+            store.dispatch(replace(this.props.redirect))
+        }
+    }
 
+    componentWillUnmount() {
+        this.props.settingUnload()
+    }
+
+    handlerClick = () => {
+        this.props.settingLogout()
     }
 
     //支持
@@ -19,9 +31,9 @@ class Setting extends PureComponent {
                 <div className='row'>
                     <div className='col-md-6 offset-md-3 col-xs-12'>
 
-                        <Errors errors={this.props.errors} />
+                        <Errors errors={this.props.errors}/>
 
-                        <SettingForm />
+                        <SettingForm/>
 
                         <button className="btn btn-outline-danger"
                                 onClick={this.handlerClick}
@@ -35,14 +47,12 @@ class Setting extends PureComponent {
     }
 }
 
-const mapState=state=>{
-    return{
+const mapState = state => {
+    return {
         ...state.user.setting
     }
 }
 
-const mapDispatch = dispatch =>({
+const mapDispatch = dispatch => ({settingLogout, settingUnload})
 
-})
-
-export default connect(mapState,mapDispatch)(Setting)
+export default connect(mapState, mapDispatch)(Setting)
