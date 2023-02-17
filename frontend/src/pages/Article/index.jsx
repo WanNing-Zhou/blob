@@ -3,7 +3,8 @@ import {connect} from "react-redux";
 import {Link} from "react-router-dom";
 import {marked} from "marked";
 import Comment from "../Comment";
-import {getArticleBySlut,articleUnload} from '../../actions/article'
+import {getArticleBySlut,articleUnload} from '../../actions/article';
+import ArticleAction from "./ArticleAction";
 
 class Article extends PureComponent{
     componentDidMount() {

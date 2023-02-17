@@ -14,7 +14,7 @@ class Profile extends PureComponent {
 
         this.props.getProfile(username)
 
-        this.props.getArticleByAuthor(username)
+        this.props.getArticleByAuthor(username,1)
     }
 
     componentDidUpdate(prevProps, prevState, snapshot) {
@@ -65,7 +65,7 @@ class Profile extends PureComponent {
                                                 onClick={
                                                     () => {
                                                         this.setState({tab: 1})
-                                                        this.props.getArticleByAuthor(profile.username)
+                                                        this.props.getArticleByAuthor(profile.username,1)
                                                     }
                                                 }
                                         >
@@ -77,7 +77,7 @@ class Profile extends PureComponent {
                                                 onClick={
                                                     () => {
                                                         this.setState({tab: 2})
-                                                        this.props.getArticleByFavorite(profile.username)
+                                                        this.props.getArticleByFavorite(profile.username,1)
                                                     }
                                                 }
                                         >
