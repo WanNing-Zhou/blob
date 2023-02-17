@@ -10,6 +10,7 @@ export const articleUnload = () => {
 
 //同步
 export const articleFiledUpdate = (key, value) => {
+    console.log('action articleFiledUpdate',key,value)
     return {type: constant.ARTICLE_CREATE_FIELD, key, value}
 }
 

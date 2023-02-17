@@ -1,53 +1,67 @@
 import React, {PureComponent} from 'react';
 import {connect} from "react-redux";
-import  {articleFiledUpdate,articleUnload,articleAddTag,articleRemoveTag,createArticle} from '../../actions/article'
+import {articleFiledUpdate, articleUnload, articleAddTag, articleRemoveTag, createArticle} from '../../actions/article'
 
 class ArticleNew extends PureComponent {
-    //状态: 主体同步
-    changeBody = (e)=>{
 
+    componentWillUnmount() {
+        this.props.articleUnload()
+    }
+
+    //状态: 主体同步
+    changeBody = (e) => {
+        this.props.articleFiledUpdate("body", e.target.value);
     }
 
     //状态: 描述同步
-    changeDescription=(e)=>{
-
+    changeDescription = (e) => {
+        this.props.articleFiledUpdate("description", e.target.value)
     }
 
     //状态: 标签同步
-    changeTag=(e)=>{
+    changeTag = (e) => {
+        // console.log('标签改变了',e.target.value)
+        this.props.articleFiledUpdate("tag", e.target.value)
 
     }
 
     //状态 标题同步
-    changeTitle=(e)=>{
+    changeTitle = (e) => {
+        console.log('标题改变了',e.target.value)
+        this.props.articleFiledUpdate("title", e.target.value)
+        console.log(this.props)
 
     }
 
     //提交
-    onSubmit=(e)=>{
-        const {} = this.props
+    onSubmit = (e) => {
+        const {title, description, body, tags} = this.props
+        console.log('提交中的props',this.props)
         e.preventDefault() //阻止默认事件
+        this.props. createArticle({title,description,body,tags})
     }
 
     //监听Enter
-    watchEnter = (e)=>{
-        if (e.keyCode === 13){
+    watchEnter = (e) => {
+        if (e.keyCode === 13) {
             e.preventDefault()//阻止默认事件
+            this.props.articleAddTag()
 
         }
     }
 
-    //状态: 标签同步
-    removeTag = (tag)=>{
-        return (e)=>{
+    //删除表标签
+    removeTag = (tag) => {
+        return (e) => {
             e.preventDefault()//阻止默认事件
+            this.props.articleRemoveTag(tag)
         }
     }
 
     state = {};
 
     render() {
-        const { title, description, body, tag, tags } = this.props
+        const {title, description, body, tag, tags} = this.props
         return (
             <div className="editer-page">
                 <div className='container page'>
@@ -87,7 +101,7 @@ class ArticleNew extends PureComponent {
                                         className='form-control form-control-lg'
                                         type="text"
                                         placeholder='请输入标签'
-                                        value={tag || ""}
+                                        value= {tag || ""}
                                         onChange={this.changeTag}
                                         onKeyUp={this.watchEnter}
                                     />
@@ -119,11 +133,12 @@ class ArticleNew extends PureComponent {
         )
     }
 }
-const mapState = state=>({
+
+const mapState = state => ({
     ...state.article
 })
 
-const mapDispatch = dispatch =>({
+const mapDispatch = dispatch => ({
     articleFiledUpdate,
     articleUnload,
     articleAddTag,

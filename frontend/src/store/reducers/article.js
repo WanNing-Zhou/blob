@@ -15,6 +15,7 @@ const articleReducer = (state = initState, action) => {
         case constant.ARTICLE_CREATE_FIELD:
             const key = action.key
             const value = action.value
+            console.log('key&value',key,value)
             return {...state, [key]: value}
         case constant.ARTICLE_ADD_TAG:
             const tags = state.tags.concat([state.tag])
