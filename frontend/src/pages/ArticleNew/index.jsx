@@ -27,16 +27,16 @@ class ArticleNew extends PureComponent {
 
     //状态 标题同步
     changeTitle = (e) => {
-        console.log('标题改变了',e.target.value)
+        // console.log('标题改变了',e.target.value)
         this.props.articleFiledUpdate("title", e.target.value)
-        console.log(this.props)
+        // console.log(this.props)
 
     }
 
     //提交
     onSubmit = (e) => {
         const {title, description, body, tags} = this.props
-        console.log('提交中的props',this.props)
+        // console.log('提交中的props',this.props)
         e.preventDefault() //阻止默认事件
         this.props. createArticle({title,description,body,tags})
     }
@@ -138,12 +138,12 @@ const mapState = state => ({
     ...state.article
 })
 
-const mapDispatch = dispatch => ({
+const mapDispatch = {
     articleFiledUpdate,
     articleUnload,
     articleAddTag,
     articleRemoveTag,
     createArticle
-})
+}
 
 export default connect(mapState, mapDispatch)(ArticleNew)

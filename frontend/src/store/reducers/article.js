@@ -9,13 +9,14 @@ const initState = {
 }
 
 const articleReducer = (state = initState, action) => {
+    // console.log('articleReducer',action.type)
     switch (action.type) {
         case constant.ARTICLE_UNLOAD:
             return {...initState}
         case constant.ARTICLE_CREATE_FIELD:
             const key = action.key
             const value = action.value
-            console.log('key&value',key,value)
+            // console.log('key&value',key,value)
             return {...state, [key]: value}
         case constant.ARTICLE_ADD_TAG:
             const tags = state.tags.concat([state.tag])
