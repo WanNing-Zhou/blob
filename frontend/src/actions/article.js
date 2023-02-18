@@ -52,7 +52,7 @@ export const createArticle = (article) => {
 
 // 通过Slug获取文章
 export const getArticleBySlug = (slug) => {
-    console.log('方法还未执行')
+    // console.log('方法还未执行')
     return async (dispatch, getState) => {
         try {
             // console.log('request slug',slug)
@@ -79,7 +79,7 @@ export const deleteArticle = (slug) => {
     return async (dispatch, getState) => {
         try {
             const result = await request.article.delete(slug)
-            console.log("文章删除", result);
+            // console.log("文章删除", result);
             if (result.status === 1) {
                 dispatch(push('/'))
             } else {
