@@ -9,6 +9,8 @@ const Regist = lazy(()=>import("./pages/Regist"))
 const ArticleNew = lazy(()=>import('./pages/ArticleNew'))
 const Setting = lazy(()=>import('./pages/Setting'))
 const Profile = lazy(()=>import('./pages/Profile'))
+const Article = lazy(() => import("./pages/Article"))
+const ArticleEdit = lazy(() => import("./pages/ArticleEdit"))
 
 function App() {
     return (
@@ -24,6 +26,8 @@ function App() {
 
                     <Route path={'/article/new'} component={ArticleNew} />{/*exact 表示精确匹配*/}
                     <Route path={'/setting'} component={Setting} exact/>
+                    <Route path={"/article/:slug"} component={Article} exact />
+                    <Route path={"/article/edit/:slug"} component={ArticleEdit} exact />
                     <Route path={"/profile/:username"} component={Profile}/>
 
                 </Switch>

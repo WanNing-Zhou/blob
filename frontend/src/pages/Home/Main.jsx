@@ -18,7 +18,8 @@ let AllTab = memo(props => {
     } else {
         return (
             <li className="nav-item">
-                <button type="button" className={tab === "all" ? "nav-link active" : "nav-link"}
+                <button type="button"
+                        className={tab === "all" ? "nav-link active" : "nav-link"}
                         onClick={handClick}
                 >
                     全部
@@ -59,12 +60,7 @@ class Main extends PureComponent {
     }
 
     render() {
-        // if (this.props.currentUser) {
-        //     // console.log("加载");
-        //     this.props.syncPage(1)
-        //     this.props.syncTab("all")
-        //     this.props.onTabClick()
-        // }
+
         return (
             <div className="col-md-9">
                 <div className="feet-toggle">
@@ -108,12 +104,8 @@ const mapState = state => ({
     ...state.user.login
 })
 
-const mapDispatch = dispatch => ({
-    syncPage: (page) => dispatch(syncPage(page)),
-    syncTab: (tab) => dispatch(syncTab(tab)),
-    syncTag: (tag) => dispatch(syncTag(tag)),
-    onTabClick: () => dispatch(onTabClick()),
-    homeUnmount: () => dispatch(homeUnmount()),
-})
+const mapDispatch = {
+    syncPage, syncTab, syncTag, onTabClick, homeUnmount
+}
 
 export default connect(mapState, mapDispatch)(Main)

@@ -51,7 +51,7 @@ export const createArticle = (article) => {
 }
 
 // 通过Slug获取文章
-export const getArticleBySlut = (slug) => {
+export const getArticleBySlug = (slug) => {
     return async (dispatch, getState) => {
         try {
             const result = await request.article.get(slug)

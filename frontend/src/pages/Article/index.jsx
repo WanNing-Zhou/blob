@@ -3,7 +3,7 @@ import {connect} from "react-redux";
 import {Link} from "react-router-dom";
 import {marked} from "marked";
 import Comment from "../Comment";
-import {getArticleBySlut,articleUnload} from '../../actions/article';
+import {getArticleBySlug,articleUnload} from '../../actions/article';
 import ArticleAction from "./ArticleAction";
 
 class Article extends PureComponent{
@@ -13,7 +13,7 @@ class Article extends PureComponent{
     }
 
     componentWillUnmount() {
-        this.props.onUnload()
+        this.props.articleUnload()
     }
 
 
@@ -85,7 +85,7 @@ const mapState = state =>({
 })
 
 const mapDispatch = dispatch =>({
-    getArticleBySlut,
+    getArticleBySlug,
     articleUnload
 })
 

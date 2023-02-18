@@ -4,7 +4,7 @@ import {Link} from "react-router-dom";
 import  {getComment,deleteComment,createComment,commentFiledUpdate} from '../../actions/comment'
 import CommentList from "./CommentList";
 
-export default class Comment extends PureComponent {
+class Comment extends PureComponent {
 
     state = {};
 
@@ -16,7 +16,7 @@ export default class Comment extends PureComponent {
 
     //同步评论
     FiledComment = (e) => {
-        this.props.FiledComment('body', e.target.value)
+        this.props.commentFiledUpdate('body', e.target.value)
     }
 
     //创建评论
