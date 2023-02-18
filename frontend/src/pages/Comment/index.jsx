@@ -84,7 +84,7 @@ class Comment extends PureComponent {
     }
 }
 const mapState = state =>({
-    ...this.state.comment
+    ...state.comment
 })
 
 const mapDispatch = {

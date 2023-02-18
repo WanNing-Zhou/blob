@@ -6,27 +6,36 @@ import Article from "../Article";
 class ArticleEdit extends PureComponent {
 
     componentDidMount() {
+        // 获取文章的信息
+        const slug = this.props.match.params.slug
+        this.props.getArticleBySlug(slug)
     }
     componentWillUnmount() {
+        this.props.articleUnload()
     }
     changeBody = (e)=>{
-
+        this.props.articleFiledUpdate("body", e.target.value)
     }
 
     changeDescription=(e)=>{
-
+        this.props.articleFiledUpdate("description", e.target.value)
     }
     changeTag = (e)=>{
-
+        this.props.articleFiledUpdate('tag',e.target.value)
     }
     changeTitle=(e)=>{
-
+        this.props.articleFiledUpdate('title',e.target.value)
     }
     onSubmit=(e)=>{
-
+        const { title, description, body, tags, slug } = this.props
+        e.preventDefault() //阻止默认事件
+        this.props.updateArticle({ title, description, body, tags, slug })
     }
     watchEnter=(e)=>{
-
+        if (e.keyCode === 13) {
+            e.preventDefault()
+            this.props.onAddTag()
+        }
     }
     removeTag = (tag)=>{
 

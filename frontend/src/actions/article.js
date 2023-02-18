@@ -52,9 +52,12 @@ export const createArticle = (article) => {
 
 // 通过Slug获取文章
 export const getArticleBySlug = (slug) => {
+    console.log('方法还未执行')
     return async (dispatch, getState) => {
         try {
+            console.log('request slug',slug)
             const result = await request.article.get(slug)
+            console.log('request result',result)
             //console.log("文章详情",result);
             dispatch({type: constant.ARTICLE_GET_RESULT, result})
 

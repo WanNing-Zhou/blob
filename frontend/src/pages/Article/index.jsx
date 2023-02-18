@@ -84,9 +84,9 @@ const mapState = state =>({
     currentUser:state.user.login.currentUser
 })
 
-const mapDispatch = dispatch =>({
+const mapDispatch = {
     getArticleBySlug,
     articleUnload
-})
+}
 
 export default connect(mapState,mapDispatch)(Article)
