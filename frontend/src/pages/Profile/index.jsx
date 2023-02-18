@@ -1,33 +1,36 @@
-import React, {PureComponent} from 'react';
-import {connect} from "react-redux";
-import ButtonInfo from "./ButtonInfo";
-import {getProfile, addFollow, deleteFollow} from "../../actions/profile";
-import {getArticleByAuthor, getArticleByFavorite} from "../../actions/articles";
-import Articles from "../Articles";
+import { PureComponent } from "react"
+import { getProfile, addFollow, deleteFollow } from "../../actions/profile"
+import { getArtcileByAuthor, getArtcileByFavorite } from "../../actions/articles"
+import { connect } from "react-redux"
+import ButtonInfo from "./ButtonInfo"
+import Articles from "../Articles"
 
 class Profile extends PureComponent {
 
-    state = {};
+    state = {
+        tab: 1
+    }
 
     componentDidMount() {
         let username = this.props.match.params.username
 
         this.props.getProfile(username)
 
-        this.props.getArticleByAuthor(username,1)
+        this.props.getArtcileByAuthor(username,1)
     }
 
-    componentDidUpdate(prevProps, prevState, snapshot) {
+    componentDidUpdate(preProps) {
         let username = this.props.match.params.username
         if (username && username !== this.props.profile.username) {
             this.props.getProfile(username)
         }
     }
 
+
     render() {
-        const {profile, currentUser, addFollow, deleteFollow, articlesReducer} = this.props
+        const { profile, currentUser, deleteFollow, addFollow, articlesReducer } = this.props
         // console.log(articles);
-        const {count, currentPage, articles} = articlesReducer
+        const {count,currentPage,articles} = articlesReducer
         // console.log(count);
         const isCurrentUser = currentUser && currentUser.username === profile.username
         return (
@@ -38,7 +41,7 @@ class Profile extends PureComponent {
                         <div className='row'>
                             <div className='col-md-10 offset-md-1 col-xs-12'>
                                 <img src={profile.avatar || "http://localhost:8000/default.png"}
-                                     style={{width: 100, height: 100}} alt=""/>
+                                     style={{ width: 100, height: 100 }} alt="" />
                                 <h4>{profile.username}</h4>
                                 <p>{profile.bio}</p>
 
@@ -64,8 +67,8 @@ class Profile extends PureComponent {
                                         <button className={this.state.tab === 1 ? "nav-link active" : "nav-link"}
                                                 onClick={
                                                     () => {
-                                                        this.setState({tab: 1})
-                                                        this.props.getArticleByAuthor(profile.username,1)
+                                                        this.setState({ tab: 1 })
+                                                        this.props.getArtcileByAuthor(profile.username,1)
                                                     }
                                                 }
                                         >
@@ -76,8 +79,8 @@ class Profile extends PureComponent {
                                         <button className={this.state.tab === 2 ? "nav-link active" : "nav-link"}
                                                 onClick={
                                                     () => {
-                                                        this.setState({tab: 2})
-                                                        this.props.getArticleByFavorite(profile.username,1)
+                                                        this.setState({ tab: 2 })
+                                                        this.props.getArtcileByFavorite(profile.username,1)
                                                     }
                                                 }
                                         >
@@ -101,21 +104,21 @@ class Profile extends PureComponent {
         )
     }
 
+
 }
 
 const mapState = state => ({
     profile: state.profile,
     currentUser: state.user.login.currentUser,
-    articlesReducer: state.articles
-
+    articlesReducer: state.articlesReducer
 })
 
 const mapDispatch = {
     getProfile,
     addFollow,
     deleteFollow,
-    getArticleByAuthor,
-    getArticleByFavorite
+    getArtcileByAuthor,
+    getArtcileByFavorite
 }
 
 export default connect(mapState, mapDispatch)(Profile)

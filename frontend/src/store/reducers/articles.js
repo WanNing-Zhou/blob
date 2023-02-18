@@ -4,16 +4,16 @@ const initState = {
     articles: [],
     tags: [],
     tag: null,
-    currentPage: 1 //第一页
+    currentPage: 1
 }
 
-const articlesReducer = (state = initState,action)=>{
+const articlesReducer = (state = initState, action) => {
     switch (action.type) {
         case constant.ARTICLE_AUTHOR_RESULT:
-            if (action.result.state === 1){
+            if (action.result.status === 1) {
                 const { articles, count } = action.result.data
                 return { ...state, articles, count }
-            }else {
+            } else {
                 return { ...state, errors: { message: action.result.message } }
             }
         default:
@@ -21,4 +21,4 @@ const articlesReducer = (state = initState,action)=>{
     }
 }
 
-export default articlesReducer;
+export default articlesReducer

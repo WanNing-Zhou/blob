@@ -3,6 +3,7 @@ import Items from "./Items";
 import Pagination from "./Pagination";
 const Articles = props =>{
     const {articles,count,currentPage,onPageClick,isShowPage}= props;
+    console.log(articles)
 
     if (!articles){ //如果文章还未加载成功
         return <div className="article-preview">加载中。。。</div>

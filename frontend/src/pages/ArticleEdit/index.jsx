@@ -34,7 +34,7 @@ class ArticleEdit extends PureComponent {
     watchEnter=(e)=>{
         if (e.keyCode === 13) {
             e.preventDefault()
-            this.props.onAddTag()
+            this.props.articleAddTag()
         }
     }
     removeTag = (tag)=>{

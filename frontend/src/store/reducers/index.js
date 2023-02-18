@@ -4,7 +4,7 @@ import regist from "./user/regist";
 import login from "./user/login";
 import setting from "./user/setting";
 import profile from "./profile";
-import articles from "./articles";
+import articlesReducer from "./articles";
 import article from "./article";
 import comment from "./comment";
 import home from "./home";
@@ -16,7 +16,7 @@ let createRootReducer=(history)=>combineReducers({
         setting
     }),
     profile,
-    articles,
+    articlesReducer,
     article,
     comment,
     home,
