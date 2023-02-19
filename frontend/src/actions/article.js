@@ -104,7 +104,7 @@ export const favoriteArticle = (slug) => {
     return async (dispatch, getState) => {
         try {
             const result = await request.article.favorite(slug)
-            // console.log("文章详情",result)
+            console.log("文章详情",result)
             dispatch({type: constant.ARTICLE_FAVORITE_RESULT, result})
         } catch (error) {
             dispatch({
